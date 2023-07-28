@@ -8,6 +8,22 @@ from openpyxl.utils.cell import coordinate_from_string, get_column_letter,column
 from openpyxl.drawing.image import Image
 from copy import copy
 
+def _coordinate_strig_to_index(coord):
+    coord_tuple = coordinate_from_string(coord)  # Parse the first coordinate string
+    coord_col_idx = column_index_from_string(coord_tuple[0])
+    return coord_col_idx,coord_tuple[1]
+
+
+def _add_coordinates(coord, offsets):
+    '''
+    coord can be 'A1', offsets can be (1, 2)
+    '''
+    coord_col_idx,coord_row_idx = _coordinate_strig_to_index(coord)
+    res_coord_col_idx = coord_col_idx+offsets[0]
+    res_coord_row_idx = coord_row_idx+offsets[1]
+    col_letter = get_column_letter(res_coord_col_idx)
+    return col_letter+str(res_coord_row_idx)
+
 
 class XlsxWriter():
     def __init__(self,template_xlsx_file_path,target_xlsx_file_path,target_sheet_name):
@@ -45,14 +61,9 @@ class XlsxWriter():
 
         # Add the image to the worksheet
         self.target_sheet.add_image(image, target_cell_coord)
-
-    def _coordinate_strig_to_index(self,coord):
-        coord_tuple = coordinate_from_string(coord)  # Parse the first coordinate string
-        coord_col_idx = column_index_from_string(coord_tuple[0])
-        return coord_col_idx,coord_tuple[1]
     
     def _shift_coordinates(self,coord, offset):
-        coord_col_idx,coord_row_idx = self._coordinate_strig_to_index(coord)
+        coord_col_idx,coord_row_idx = _coordinate_strig_to_index(coord)
         result_tuple = (coord_col_idx + offset[0], coord_row_idx + offset[1])  # Add the corresponding row and column values
         result_coord = get_column_letter(result_tuple[0]) + str(result_tuple[1])  # Convert the result back to a coordinate string
         return result_coord
@@ -66,8 +77,8 @@ class XlsxWriter():
         return '{}:{}'.format(result_coord1,result_coord2)
     
     def _subtract_coordinates(self,coord1, coord2):
-        coord1_col_idx,coord1_row_idx = self._coordinate_strig_to_index(coord1)
-        coord2_col_idx,coord2_row_idx = self._coordinate_strig_to_index(coord2)
+        coord1_col_idx,coord1_row_idx = _coordinate_strig_to_index(coord1)
+        coord2_col_idx,coord2_row_idx = _coordinate_strig_to_index(coord2)
         return (coord1_col_idx-coord2_col_idx,coord1_row_idx-coord2_row_idx)
 
     def _copy_sheet_impl(self,src_file_sheet,tag_file_sheet,start_coord):
@@ -121,16 +132,32 @@ class XlsxWriter():
 
 
 if __name__=='__main__':
+    # tests
+    # res = _add_coordinates('B12',(0,1))
+
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
     target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
     target_sheet_name = 'Sheet'
     image_path = '/home/didi/myproject/tmma/tm_logo.jpg'
 
+    title_block = 'title_block'
+    theme_block = 'theme_block'
+    parent_event = 'parent_event'
+    child_event = 'child_event'
+    notice_block = 'notice_block'
+    rule_block = 'rule_block'
+    information_block = 'information_block'
+
     xlsx_writer = XlsxWriter(template_file,target_file,target_sheet_name)
     xlsx_writer.write_sheet('title_block')
-    xlsx_writer.write_sheet('schedule_block',start_coord='B12',data={'{start_time}':'12:01','{event_name}':'开场'})
+    xlsx_writer.write_sheet('theme_block',start_coord='B9',data={'{theme_name}':'主题：父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
+    cur_start_coord = 'B12'
+    for i in range(3):
+        cur_start_coord = _add_coordinates(cur_start_coord,(0,1))
+        xlsx_writer.write_sheet(parent_event,start_coord=cur_start_coord,data={'{start_time}':'12:01','{event_name}':'开场','{duration}':'8'})
+        cur_start_coord = _add_coordinates(cur_start_coord,(0,1))
+        xlsx_writer.write_sheet(child_event,start_coord=cur_start_coord,data={'{event_name}':'开场白','{end_time}':'15:01','{duration}':'8','{host_name}':'林长宏'})
     xlsx_writer.write_sheet('rule_block',start_coord='L9')
     xlsx_writer.write_sheet('information_block',start_coord='L16')
     xlsx_writer.add_image(image_path, target_cell_coord='B2')
     xlsx_writer.save()
-    # res = find_text_in_cells(source_file,sheet2_name,'{event_name}')

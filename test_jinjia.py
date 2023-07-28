@@ -149,10 +149,13 @@ target_sheet_name = 'calendar'
 
 source_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
 target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
-sheet1_name = 'title_block'
-sheet2_name = 'schedule_block'
-sheet3_name = 'rule_block'
-sheet4_name = 'information_block'
+title_block = 'title_block'
+theme_block = 'theme_block'
+parent_event = 'parent_event'
+child_event = 'child_event'
+notice_block = 'notice_block'
+rule_block = 'rule_block'
+information_block = 'information_block'
 
 # xlsx_sheet_copy(source_file,sheet1_name,target_file,target_sheet_name)
 # xlsx_sheet_copy(source_file,sheet2_name,target_file,target_sheet_name,start_coord='B12')
