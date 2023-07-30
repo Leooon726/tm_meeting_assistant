@@ -1,13 +1,18 @@
 import re
 from datetime import datetime, timedelta
 
-# class ParentEvents():
-#     def __init__(self,parent_event_list):
-#         self.parent_event_list = parent_event_list
+class NoticeEvent():
+    def __init__(self,notice):
+        self.notice_event = {'{time}':None,'{notice}':notice}
 
-#     def calculate_time(self,start_time):
-#         for parent_event in self.parent_event_list:
+    def calculate_time(self,start_time):
+        self.notice_event['{time}'] = start_time
 
+    def get_end_time(self):
+        return self.notice_event['{time}']
+
+    def get_event(self):
+        return self.notice_event
 
 
 class ParentEvent():
@@ -52,6 +57,9 @@ class ParentEvent():
             child_event['{end_time}'] = cur_time+timedelta(minutes=child_event['{duration}'])
             cur_time = child_event['{end_time}']
 
+        # If parent event duration already set, no need to derive it.
+        if self.parent_event['{duration}'] is not None:
+            return
         duration_sum = 0
         for child_event in self.child_events:
             duration_sum+=child_event['{duration}']
@@ -72,7 +80,7 @@ class ParentEvent():
     def get_child_events(self):
         return [self._convert_datetime_values_to_string(child_event) for child_event in self.child_events]
 
-    def get_parent_end_time(self):
+    def get_end_time(self):
         end_time = self.parent_event['{start_time}']+timedelta(minutes=self.parent_event['{duration}'])
         end_time_str = end_time.strftime("%H:%M")
         return end_time_str
@@ -126,12 +134,27 @@ class MeetingParser:
         
         return parent_event
 
-    def parse_agenda(self, content):
-        parent_event_list = self._split_with_hash(content)
-        for parent_event_string in parent_event_list:
-            parent_event = self._parse_event_string(parent_event_string)
-            self.event_list.append(parent_event)
+    def _is_notice_block(self,event_string):
+        '''
+        A notice block is like "# 会议结束"
+        '''
+        if event_string.count('\n')==0:
+            if len(event_string.split())==2:
+                return True
+        return False
 
+    def _parse_notice_string(self,event_string):
+        notice = event_string.split()[-1]
+        return NoticeEvent(notice)
+
+    def parse_agenda(self, content):
+        block_list = self._split_with_hash(content)
+        for block_string in block_list:
+            if self._is_notice_block(block_string):
+                event = self._parse_notice_string(block_string)
+            else:
+                event = self._parse_event_string(block_string)
+            self.event_list.append(event)
 
     def parse_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as file:
@@ -156,8 +179,11 @@ if __name__=='__main__':
     print(role_dict)
     print("\nAgenda List:")
     cur_time = '15:00'
-    for parent_event in event_list:
-        parent_event.calculate_time(cur_time)
-        cur_time = parent_event.get_parent_end_time()
-        print('111 ',parent_event.get_parent_event())
-        print('2222',parent_event.get_child_events())
+    for event in event_list:
+        event.calculate_time(cur_time)
+        cur_time = event.get_end_time()
+        if isinstance(event, ParentEvent):
+            print('111 ',event.get_parent_event())
+            print('2222',event.get_child_events())
+        elif isinstance(event, NoticeEvent):
+            print('notice: ',event.get_event())

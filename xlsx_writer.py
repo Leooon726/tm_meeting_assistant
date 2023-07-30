@@ -3,10 +3,9 @@ from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Border, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 from openpyxl import Workbook, load_workbook
-from copy import copy
+from copy import copy, deepcopy
 from openpyxl.utils.cell import coordinate_from_string, get_column_letter,column_index_from_string,range_boundaries
 from openpyxl.drawing.image import Image
-from copy import copy
 
 def _coordinate_strig_to_index(coord):
     coord_tuple = coordinate_from_string(coord)  # Parse the first coordinate string
@@ -43,10 +42,10 @@ class XlsxWriter():
 
     def write_sheet(self,template_sheet_name,start_coord='A1',data=None):
         # TODO(Changhong): add data to template.
-        src_file_sheet = copy(self.template_workbook[template_sheet_name])
+        src_file_sheet = self._copy_sheet_impl(self.template_workbook[template_sheet_name])
         if data is not None:
             src_file_sheet = self._modify_sheet(src_file_sheet,data)
-        self._copy_sheet_impl(src_file_sheet,self.target_sheet,start_coord)
+        self._paste_sheet_impl(src_file_sheet,self.target_sheet,start_coord)
         
     def add_image(self,image_path, target_cell_coord,image_width=100,image_height=100):
         # Load the image
@@ -81,7 +80,51 @@ class XlsxWriter():
         coord2_col_idx,coord2_row_idx = _coordinate_strig_to_index(coord2)
         return (coord1_col_idx-coord2_col_idx,coord1_row_idx-coord2_row_idx)
 
-    def _copy_sheet_impl(self,src_file_sheet,tag_file_sheet,start_coord):
+    def _copy_sheet_impl(self,original_sheet):
+        new_workbook = Workbook()
+        new_workbook.remove(new_workbook.active)  # Remove the default sheet
+    
+        new_sheet = new_workbook.create_sheet(original_sheet.title)
+        for row in original_sheet:
+            # 遍历源xlsx文件制定sheet中的所有单元格
+            for cell in row:  # 复制数据
+                target_cell_coord = cell.coordinate
+                new_sheet[target_cell_coord].value = cell.value
+                if cell.has_style:  # 复制样式
+                    new_sheet[target_cell_coord].font = copy(cell.font)
+                    new_sheet[target_cell_coord].border = copy(cell.border)
+                    new_sheet[target_cell_coord].fill = copy(cell.fill)
+                    new_sheet[target_cell_coord].number_format = copy(
+                        cell.number_format
+                    )
+                    new_sheet[target_cell_coord].protection = copy(cell.protection)
+                    new_sheet[target_cell_coord].alignment = copy(cell.alignment)
+    
+        wm = list(zip(original_sheet.merged_cells))  # 开始处理合并单元格
+        if len(wm) > 0:  # 检测源xlsx中合并的单元格
+            for i in range(0, len(wm)):
+                cell2 = (
+                    str(wm[i]).replace("(<MergedCellRange ", "").replace(">,)", "")
+                )  # 获取合并单元格的范围
+                shifted_cell2 = cell2
+                new_sheet.merge_cells(shifted_cell2)  # 合并单元格
+        # 开始处理行高列宽
+        for i in range(1, original_sheet.max_row + 1):
+            new_sheet.row_dimensions[i].height = original_sheet.row_dimensions[
+                i
+            ].height
+        for i in range(1, original_sheet.max_column + 1):
+            new_sheet.column_dimensions[
+                get_column_letter(i)
+            ].width = original_sheet.column_dimensions[get_column_letter(i)].width
+
+        for img in new_sheet._images:
+            img_copy = Image(img._data)
+            new_sheet.add_image(img_copy, img.anchor)
+    
+        return new_sheet
+
+    def _paste_sheet_impl(self,src_file_sheet,tag_file_sheet,start_coord):
         shift_offset = self._subtract_coordinates(start_coord,'A1')
         for row in src_file_sheet:
             # 遍历源xlsx文件制定sheet中的所有单元格
