@@ -7,21 +7,7 @@ from copy import copy, deepcopy
 from openpyxl.utils.cell import coordinate_from_string, get_column_letter,column_index_from_string,range_boundaries
 from openpyxl.drawing.image import Image
 
-def _coordinate_strig_to_index(coord):
-    coord_tuple = coordinate_from_string(coord)  # Parse the first coordinate string
-    coord_col_idx = column_index_from_string(coord_tuple[0])
-    return coord_col_idx,coord_tuple[1]
-
-
-def _add_coordinates(coord, offsets):
-    '''
-    coord can be 'A1', offsets can be (1, 2)
-    '''
-    coord_col_idx,coord_row_idx = _coordinate_strig_to_index(coord)
-    res_coord_col_idx = coord_col_idx+offsets[0]
-    res_coord_row_idx = coord_row_idx+offsets[1]
-    col_letter = get_column_letter(res_coord_col_idx)
-    return col_letter+str(res_coord_row_idx)
+from excel_utils import coordinate_strig_to_index,add_coordinates
 
 
 class XlsxWriter():
@@ -51,7 +37,7 @@ class XlsxWriter():
         # Load the image
         image = Image(image_path)
 
-        # col_idx,row_idx = _coordinate_strig_to_index(target_cell_coord)
+        # col_idx,row_idx = coordinate_strig_to_index(target_cell_coord)
         # col_letter = get_column_letter(col_idx)
         # cell_width = sheet.column_dimensions[col_letter].width
         # cell_height = sheet.row_dimensions[row_idx].height
@@ -62,7 +48,7 @@ class XlsxWriter():
         self.target_sheet.add_image(image, target_cell_coord)
     
     def _shift_coordinates(self,coord, offset):
-        coord_col_idx,coord_row_idx = _coordinate_strig_to_index(coord)
+        coord_col_idx,coord_row_idx = coordinate_strig_to_index(coord)
         result_tuple = (coord_col_idx + offset[0], coord_row_idx + offset[1])  # Add the corresponding row and column values
         result_coord = get_column_letter(result_tuple[0]) + str(result_tuple[1])  # Convert the result back to a coordinate string
         return result_coord
@@ -76,8 +62,8 @@ class XlsxWriter():
         return '{}:{}'.format(result_coord1,result_coord2)
     
     def _subtract_coordinates(self,coord1, coord2):
-        coord1_col_idx,coord1_row_idx = _coordinate_strig_to_index(coord1)
-        coord2_col_idx,coord2_row_idx = _coordinate_strig_to_index(coord2)
+        coord1_col_idx,coord1_row_idx = coordinate_strig_to_index(coord1)
+        coord2_col_idx,coord2_row_idx = coordinate_strig_to_index(coord2)
         return (coord1_col_idx-coord2_col_idx,coord1_row_idx-coord2_row_idx)
 
     def _copy_sheet_impl(self,original_sheet):
@@ -176,7 +162,7 @@ class XlsxWriter():
 
 if __name__=='__main__':
     # tests
-    # res = _add_coordinates('B12',(0,1))
+    # res = add_coordinates('B12',(0,1))
 
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
     target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
@@ -196,9 +182,9 @@ if __name__=='__main__':
     xlsx_writer.write_sheet('theme_block',start_coord='B9',data={'{theme_name}':'主题：父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
     cur_start_coord = 'B12'
     for i in range(3):
-        cur_start_coord = _add_coordinates(cur_start_coord,(0,1))
+        cur_start_coord = add_coordinates(cur_start_coord,(0,1))
         xlsx_writer.write_sheet(parent_event,start_coord=cur_start_coord,data={'{start_time}':'12:01','{event_name}':'开场','{duration}':'8'})
-        cur_start_coord = _add_coordinates(cur_start_coord,(0,1))
+        cur_start_coord = add_coordinates(cur_start_coord,(0,1))
         xlsx_writer.write_sheet(child_event,start_coord=cur_start_coord,data={'{event_name}':'开场白','{end_time}':'15:01','{duration}':'8','{host_name}':'林长宏'})
     xlsx_writer.write_sheet('rule_block',start_coord='L9')
     xlsx_writer.write_sheet('information_block',start_coord='L16')

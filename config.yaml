@@ -1,0 +1,24 @@
+title_block:
+  coordinate: A1
+
+theme_block:
+  # theme_block is aligned to the left with title_block.
+  column_position:
+    type: aligned
+    orientation: left
+    object: title_block
+  # theme_block is adjacent to the bottom of title_block.
+  row_position:
+    type: adjacent
+    orientation: bottom
+    object: title_block
+
+schedule_block:
+  column_position:
+    type: aligned
+    orientation: left
+    object: theme_block
+  row_position:
+    type: adjacent
+    orientation: bottom
+    object: theme_block
