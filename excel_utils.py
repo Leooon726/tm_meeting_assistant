@@ -17,3 +17,20 @@ def add_coordinates(coord, offsets):
     res_coord_col_idx = coord_col_idx+offsets[0]
     res_coord_row_idx = coord_row_idx+offsets[1]
     return index_to_coordinate_string(res_coord_col_idx,res_coord_row_idx)
+
+def get_left_top_coordinate(sheet):
+    min_row = sheet.min_row
+    min_col = sheet.min_column
+    left_top_coordinate = f"{get_column_letter(min_col)}{min_row}"
+    return left_top_coordinate
+
+def get_right_bottom_coordinate(sheet):
+    max_row = sheet.max_row
+    max_col = sheet.max_column
+    right_bottom_coordinate = f"{get_column_letter(max_col)}{max_row}"
+    return right_bottom_coordinate
+
+def get_sheet_dimensions(sheet):
+    width = sheet.max_column - sheet.min_column + 1
+    height = sheet.max_row - sheet.min_row + 1
+    return width, height

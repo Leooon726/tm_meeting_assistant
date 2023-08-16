@@ -1,13 +1,6 @@
 from input_parser import MeetingParser, ParentEvent, NoticeEvent
 import xlsx_writer as xw
 
-class Block():
-    def __init__(sheet_template,start_coord):
-        self.sheet_template = sheet_template
-        self.
-
-    def 
-
 if __name__=='__main__':
     parser = MeetingParser()
     parser.parse_file("/home/didi/myproject/tmma/user_input.txt")
