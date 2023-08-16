@@ -166,6 +166,13 @@ class MeetingParser:
         self.parse_roles(role_section)
         self.parse_agenda(agenda_section)
 
+    def get_total_event_num(self):
+        cnt = len(event_list)
+        for event in event_list:
+            if isinstance(event,ParentEvent):
+                cnt+=len(event.get_child_events())
+        return cnt
+
 
 if __name__=='__main__':
     # tests.

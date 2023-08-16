@@ -1,5 +1,7 @@
 title_block:
-  coordinate: A1
+  coordinate: B2
+  width: 14
+  height: 7
 
 theme_block:
   # theme_block is aligned to the left with title_block.
@@ -12,6 +14,8 @@ theme_block:
     type: adjacent
     orientation: bottom
     object: title_block
+  width: 10
+  height: 3
 
 schedule_block:
   column_position:
@@ -22,3 +26,55 @@ schedule_block:
     type: adjacent
     orientation: bottom
     object: theme_block
+  width: 10
+
+rule_block:
+  column_position:
+    type: adjacent
+    orientation: right
+    object: theme_block
+  row_position:
+    type: adjacent
+    orientation: bottom
+    object: title_block
+  width: 4
+  height: 7
+
+contact_block:
+  column_position:
+    type: aligned
+    orientation: left
+    object: rule_block
+  row_position:
+    type: adjacent
+    orientation: bottom
+    object: rule_block
+  width: 4
+  height: 9
+
+information_block:
+  column_position:
+    type: aligned
+    orientation: left
+    object: contact_block
+  row_position:
+    type: aligned
+    orientation: bottom
+    object: schedule_block
+  width: 4
+  height: 22
+
+project_block:
+  column_position:
+    type: aligned
+    orientation: left
+    object: contact_block
+  row_position:
+    type: adjacent
+    orientation: bottom
+    object: contact_block
+  width: 4
+  height:
+    type: adjacent
+    orientation: top
+    object: information_block
