@@ -88,11 +88,14 @@ class ParentEvent():
 class MeetingParser:
     def __init__(self):
         self.role_dict = {}
+        self.meeting_info_dict = {}
         self.event_list = []
 
     def parse_roles(self, content):
         lines = content.strip().split('\n')
         for line in lines:
+            if '【' in line:
+                continue
             if '：' in line:
                 role, name = line.split('：', 1)
                 self.role_dict[role] = name
@@ -148,6 +151,7 @@ class MeetingParser:
         return NoticeEvent(notice)
 
     def parse_agenda(self, content):
+        content = content.split('\n', 1)[1]
         block_list = self._split_with_hash(content)
         for block_string in block_list:
             if self._is_notice_block(block_string):
@@ -156,14 +160,31 @@ class MeetingParser:
                 event = self._parse_event_string(block_string)
             self.event_list.append(event)
 
+    def parse_meeting_info(self, content):
+        lines = content.strip().split('\n')
+        for line in lines:
+            if '：' in line:
+                name, info = line.split('：', 1)
+                self.meeting_info_dict[name] = info
+
     def parse_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
 
-        role_section = content.split("【角色表】", 1)[1]
-        agenda_section = content.split("【议程表】", 1)[1]
+        sections = content.split('\n\n')
+        
+        for section in sections:
+            if '【角色表】' in section:
+                role_section = section
+            elif '【会议信息】' in section:
+                meeting_info_section = section
+            elif '【议程表】' in section:
+                agenda_section = section
 
         self.parse_roles(role_section)
+
+        self.parse_meeting_info(meeting_info_section)
+
         self.parse_agenda(agenda_section)
 
     def get_total_event_num(self):
@@ -181,6 +202,8 @@ if __name__=='__main__':
 
     role_dict = parser.role_dict
     event_list = parser.event_list
+    meeting_info_dict = parser.meeting_info_dict
+    print(meeting_info_dict)
 
     print("Role Dictionary:")
     print(role_dict)

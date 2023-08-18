@@ -7,9 +7,10 @@ if __name__=='__main__':
     parser = MeetingParser()
     parser.parse_file("/home/didi/myproject/tmma/user_input.txt")
     event_list = parser.event_list
+    meeting_info_dict = parser.meeting_info_dict
 
     # TODO: Move cur_time to input.txt
-    cur_time = '15:00'
+    cur_time = meeting_info_dict['开始时间']
     for parent_event in event_list:
         parent_event.calculate_time(cur_time)
         cur_time = parent_event.get_end_time()
@@ -38,9 +39,12 @@ if __name__=='__main__':
 
     xlsx_writer = xw.XlsxWriter(template_file,template_sheet_name,target_file,target_sheet_name)
     # TODO: save templae position config as private member of writer.
-    xlsx_writer.write_sheet(source_position=template_position_config['title_block'],target_start_coord=start_coord_dict['title_block'])
+    # TODO：write infomation of title.
+    # TODO: a excel reader to read needed information field from template.
+    # TODO: a data extractor to find information.
+    xlsx_writer.write_sheet(source_position=template_position_config['title_block'],target_start_coord=start_coord_dict['title_block'],data={'{会议标题}':'第313次线下会议-中文会议','{摄影师}':'小白','{日期}':'2023年5月7日 （周日）','{线上会议号}':'腾讯会议 818-149-633'})
     # TODO：Parse theme from input.txt
-    xlsx_writer.write_sheet(source_position=template_position_config['theme_block'],target_start_coord=start_coord_dict['theme_block'],data={'{theme_name}':'主题：父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
+    xlsx_writer.write_sheet(source_position=template_position_config['theme_block'],target_start_coord=start_coord_dict['theme_block'],data={'{主题}':'父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
     cur_start_coord = start_coord_dict['schedule_block']
     for event in event_list:
         if isinstance(event,NoticeEvent):

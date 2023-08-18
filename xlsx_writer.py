@@ -182,8 +182,8 @@ class XlsxWriter():
                 for col_num in range(1, max_column + 1):
                     cell = sheet.cell(row=row_num, column=col_num)
                     cell_value = cell.value
-                    if cell_value == key:
-                        cell.value = value
+                    if cell_value is not None and key in cell_value:
+                        cell.value = cell.value.replace(key, str(value))
         return sheet
 
 
