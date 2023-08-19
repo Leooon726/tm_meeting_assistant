@@ -7,7 +7,7 @@ class XlsxTemplateReader():
         self.template_workbook = load_workbook(template_xlsx_file_path)
         self.template_sheet = self.template_workbook[template_sheet_name]
         self.template_position_sheet = self.template_workbook[position_sheet_name]
-        self.template_block_position_dict = {}
+        self.template_block_position_dict = self._calculate_block_position()
 
     def __exit__(self):
         self.template_workbook.close()
@@ -38,7 +38,7 @@ class XlsxTemplateReader():
         for row_num in range(start_row, end_row + 1):
             for col_num in range(start_col, end_col + 1):
                 cell = self.template_sheet.cell(row=row_num, column=col_num)
-                if cell.value is not None and '{' in cell.value:
+                if cell.value is not None and isinstance(cell.value,str) and '{' in cell.value:
                     field_list.append(self._extract_field(cell.value))
         return field_list
 
@@ -53,13 +53,18 @@ class XlsxTemplateReader():
             column_as_key_list.append(row_data)
         return column_as_key_list
 
-    def get_template_positions(self):
+    def _calculate_block_position(self):
         column_as_key_list = self._read_sheet_as_dict_list()
-        data = {}
+        result_dict = {}
         for item in column_as_key_list:
-            data[item['block_name']] = {'start_coord': item['start_coord'], 'end_coord': item['end_coord']}
-        self.template_block_position_dict = data
+            result_dict[item['block_name']] = {'start_coord': item['start_coord'], 'end_coord': item['end_coord']}
+        return result_dict
+
+    def get_template_positions(self):
         return self.template_block_position_dict
+
+    def is_pure_text_block(self,template_block_name):
+        return len(self.get_field_list(template_block_name))==0
 
 if __name__=='__main__':
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
@@ -67,7 +72,7 @@ if __name__=='__main__':
     template_position_sheet_name = 'template_position'
 
     tr = XlsxTemplateReader(template_file,template_sheet_name,template_position_sheet_name)
-    position = {'start_coord':'B2','end_coord':'O8'}
-    field_list = tr.get_field_list(position)
+    field_list = tr.get_field_list('contact_block')
     print(field_list)
     print(tr.get_template_positions())
+    print(tr.is_pure_text_block('contact_block'))

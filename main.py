@@ -81,6 +81,7 @@ if __name__=='__main__':
                 xlsx_writer.write_sheet(source_template_block_name='child_block',target_start_coord=cur_start_coord,data=child_event)
                 cur_start_coord = add_coordinates(cur_start_coord,(0,1))
     xlsx_writer.write_sheet(source_template_block_name='contact_block',target_start_coord=start_coord_dict['contact_block'])
+    # TODO: allowing project info writing.
     xlsx_writer.write_sheet(source_template_block_name='project_block',target_start_coord=start_coord_dict['project_block'])
     xlsx_writer.write_sheet(source_template_block_name='rule_block',target_start_coord=start_coord_dict['rule_block'])
     xlsx_writer.write_sheet(source_template_block_name='information_block',target_start_coord=start_coord_dict['information_block'])
