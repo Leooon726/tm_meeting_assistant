@@ -11,9 +11,10 @@ from excel_utils import coordinate_string_to_index,add_coordinates,get_left_top_
 
 
 class XlsxWriter():
-    def __init__(self,template_xlsx_file_path,template_sheet_name,target_xlsx_file_path,target_sheet_name):
+    def __init__(self,template_xlsx_file_path,template_sheet_name,template_position_config,target_xlsx_file_path,target_sheet_name):
         self.template_workbook = load_workbook(template_xlsx_file_path)
         self.template_sheet = self.template_workbook[template_sheet_name]
+        self.template_position_config = template_position_config
         self.target_workbook = Workbook()  # Create a new workbook if the target doesn't exist
         self.target_xlsx_file_path = target_xlsx_file_path
         # Create or get the sheet with the desired sheet name
@@ -27,7 +28,8 @@ class XlsxWriter():
         self.target_workbook.close()  # 关闭文件
         self.template_workbook.close()
 
-    def write_sheet(self,source_position=None,target_start_coord='A1',data=None):
+    def write_sheet(self,source_template_block_name,target_start_coord='A1',data=None):
+        source_position = self.template_position_config[source_template_block_name]
         src_file_sheet = self._copy_sheet_impl(self.template_sheet,source_position)
         if data is not None:
             src_file_sheet = self._modify_sheet(src_file_sheet,data)

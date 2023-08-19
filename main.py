@@ -1,15 +1,36 @@
 from input_parser import MeetingParser, ParentEvent, NoticeEvent
 from config_reader import PositionCalculator
 import xlsx_writer as xw
+from template_reader import XlsxTemplateReader
 from excel_utils import add_coordinates
+
+def _find_data_for_template_fields(field_list,data_dict_list):
+    def is_key_present_in_data_list(data_dict_list, key_to_check):
+        for data_dict in data_dict_list:
+            if key_to_check in data_dict:
+                return True
+        return False
+
+    res_dict = {}
+    for field_name in field_list:
+        assert field_name.startswith('{') and field_name.endswith('}')
+        field_key = field_name[1:-1]
+        assert is_key_present_in_data_list(data_dict_list,field_key)
+        if field_key in role_dict:
+            res_dict[field_name]=role_dict[field_key]
+            continue
+        if field_key in meeting_info_dict:
+            res_dict[field_name]=meeting_info_dict[field_key]
+    return res_dict
+
 
 if __name__=='__main__':
     parser = MeetingParser()
     parser.parse_file("/home/didi/myproject/tmma/user_input.txt")
     event_list = parser.event_list
+    role_dict = parser.role_dict
     meeting_info_dict = parser.meeting_info_dict
 
-    # TODO: Move cur_time to input.txt
     cur_time = meeting_info_dict['开始时间']
     for parent_event in event_list:
         parent_event.calculate_time(cur_time)
@@ -22,7 +43,8 @@ if __name__=='__main__':
     # print(pc.calculate_sizes())
 
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
-    template_sheet_name = 'calendar'
+    template_sheet_name = 'template'
+    template_position_sheet_name = 'template_position'
     target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
     target_sheet_name = 'Sheet'
     image_path = '/home/didi/myproject/tmma/tm_logo.jpg'
@@ -34,32 +56,34 @@ if __name__=='__main__':
     rule_block = 'rule_block'
     information_block = 'information_block'
 
-    # TODO: Read template position config from config.yaml.
-    template_position_config = {'title_block': {'start_coord':'B2','end_coord':'O8'},'theme_block':{'start_coord':'B9','end_coord':'K11'},'parent_block':{'start_coord':'B12','end_coord':'K12'},'child_block':{'start_coord':'B13','end_coord':'K13'},'notice_block':{'start_coord':'B49','end_coord':'K49'},'rule_block':{'start_coord':'L9','end_coord':'O15'},'information_block':{'start_coord':'L33','end_coord':'O54'},'contact_block':{'start_coord':'L16','end_coord':'O24'},'project_block':{'start_coord':'L25','end_coord':'O32'}}
+    tr = XlsxTemplateReader(template_file,template_sheet_name,template_position_sheet_name)
 
-    xlsx_writer = xw.XlsxWriter(template_file,template_sheet_name,target_file,target_sheet_name)
-    # TODO: save templae position config as private member of writer.
-    # TODO：write infomation of title.
-    # TODO: a excel reader to read needed information field from template.
-    # TODO: a data extractor to find information.
-    xlsx_writer.write_sheet(source_position=template_position_config['title_block'],target_start_coord=start_coord_dict['title_block'],data={'{会议标题}':'第313次线下会议-中文会议','{摄影师}':'小白','{日期}':'2023年5月7日 （周日）','{线上会议号}':'腾讯会议 818-149-633'})
-    # TODO：Parse theme from input.txt
-    xlsx_writer.write_sheet(source_position=template_position_config['theme_block'],target_start_coord=start_coord_dict['theme_block'],data={'{主题}':'父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
+    template_position_config = tr.get_template_positions()
+
+    xlsx_writer = xw.XlsxWriter(template_file,template_sheet_name,template_position_config,target_file,target_sheet_name)
+    field_list = tr.get_field_list('title_block')
+    title_block_data = _find_data_for_template_fields(field_list,[role_dict,meeting_info_dict])
+    xlsx_writer.write_sheet(source_template_block_name='title_block',target_start_coord=start_coord_dict['title_block'],data=title_block_data)
+    
+    field_list = tr.get_field_list('theme_block')
+    theme_block_data = _find_data_for_template_fields(field_list,[role_dict,meeting_info_dict])
+    xlsx_writer.write_sheet(source_template_block_name='theme_block',target_start_coord=start_coord_dict['theme_block'],data=theme_block_data)
+
     cur_start_coord = start_coord_dict['schedule_block']
     for event in event_list:
         if isinstance(event,NoticeEvent):
-            xlsx_writer.write_sheet(source_position=template_position_config['notice_block'],target_start_coord=cur_start_coord,data=event.get_event())
+            xlsx_writer.write_sheet(source_template_block_name='notice_block',target_start_coord=cur_start_coord,data=event.get_event())
             cur_start_coord = add_coordinates(cur_start_coord,(0,1))
         elif isinstance(event,ParentEvent):
-            xlsx_writer.write_sheet(source_position=template_position_config['parent_block'],target_start_coord=cur_start_coord,data=event.get_parent_event())
+            xlsx_writer.write_sheet(source_template_block_name='parent_block',target_start_coord=cur_start_coord,data=event.get_parent_event())
             cur_start_coord = add_coordinates(cur_start_coord,(0,1))
             for child_event in event.get_child_events():
-                xlsx_writer.write_sheet(source_position=template_position_config['child_block'],target_start_coord=cur_start_coord,data=child_event)
+                xlsx_writer.write_sheet(source_template_block_name='child_block',target_start_coord=cur_start_coord,data=child_event)
                 cur_start_coord = add_coordinates(cur_start_coord,(0,1))
-    xlsx_writer.write_sheet(source_position=template_position_config['contact_block'],target_start_coord=start_coord_dict['contact_block'])
-    xlsx_writer.write_sheet(source_position=template_position_config['project_block'],target_start_coord=start_coord_dict['project_block'])
-    xlsx_writer.write_sheet(source_position=template_position_config['rule_block'],target_start_coord=start_coord_dict['rule_block'])
-    xlsx_writer.write_sheet(source_position=template_position_config['information_block'],target_start_coord=start_coord_dict['information_block'])
+    xlsx_writer.write_sheet(source_template_block_name='contact_block',target_start_coord=start_coord_dict['contact_block'])
+    xlsx_writer.write_sheet(source_template_block_name='project_block',target_start_coord=start_coord_dict['project_block'])
+    xlsx_writer.write_sheet(source_template_block_name='rule_block',target_start_coord=start_coord_dict['rule_block'])
+    xlsx_writer.write_sheet(source_template_block_name='information_block',target_start_coord=start_coord_dict['information_block'])
     # TODO: make image coord configable.
     xlsx_writer.add_image(image_path, target_cell_coord='B2')
     xlsx_writer.save()
