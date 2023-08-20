@@ -37,7 +37,7 @@ if __name__=='__main__':
         cur_time = parent_event.get_end_time()
 
     pc = PositionCalculator('/home/didi/myproject/tmma/config.yaml')
-    pc.set_schedule_block_height(43)
+    pc.set_schedule_block_height(parser.get_total_event_num())
     start_coord_dict = pc.get_start_coords()
     # print(start_coord_dict)
     # print(pc.calculate_sizes())
@@ -81,10 +81,10 @@ if __name__=='__main__':
                 xlsx_writer.write_sheet(source_template_block_name='child_block',target_start_coord=cur_start_coord,data=child_event)
                 cur_start_coord = add_coordinates(cur_start_coord,(0,1))
     xlsx_writer.write_sheet(source_template_block_name='contact_block',target_start_coord=start_coord_dict['contact_block'])
-    # TODO: allowing project info writing.
-    xlsx_writer.write_sheet(source_template_block_name='project_block',target_start_coord=start_coord_dict['project_block'])
+    # TODO: merge cells if the template size is smaller than actual block size.
+    xlsx_writer.write_sheet(source_template_block_name='project_block',target_start_coord=start_coord_dict['project_block'],data={'{project_info}':parser.project_info})
     xlsx_writer.write_sheet(source_template_block_name='rule_block',target_start_coord=start_coord_dict['rule_block'])
     xlsx_writer.write_sheet(source_template_block_name='information_block',target_start_coord=start_coord_dict['information_block'])
     # TODO: make image coord configable.
-    xlsx_writer.add_image(image_path, target_cell_coord='B2')
+    xlsx_writer.add_image(source_cell_coord='B2', target_cell_coord='B2',image_width=150)
     xlsx_writer.save()

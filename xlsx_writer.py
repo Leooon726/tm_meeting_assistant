@@ -1,3 +1,6 @@
+import os
+import uuid
+
 from openpyxl.cell import Cell
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Border, PatternFill
@@ -6,6 +9,7 @@ from openpyxl import Workbook, load_workbook
 from copy import copy, deepcopy
 from openpyxl.utils.cell import coordinate_from_string, get_column_letter,column_index_from_string,range_boundaries
 from openpyxl.drawing.image import Image
+from openpyxl_image_loader import SheetImageLoader
 
 from excel_utils import coordinate_string_to_index,add_coordinates,get_left_top_coordinate,get_sheet_dimensions,get_right_bottom_coordinate
 
@@ -17,6 +21,7 @@ class XlsxWriter():
         self.template_position_config = template_position_config
         self.target_workbook = Workbook()  # Create a new workbook if the target doesn't exist
         self.target_xlsx_file_path = target_xlsx_file_path
+        self.temp_image_paths = []
         # Create or get the sheet with the desired sheet name
         if target_sheet_name in self.target_workbook.sheetnames:
             self.target_sheet = self.target_workbook[target_sheet_name]
@@ -27,6 +32,8 @@ class XlsxWriter():
         self.target_workbook.save(self.target_xlsx_file_path)  # 保存
         self.target_workbook.close()  # 关闭文件
         self.template_workbook.close()
+        for temp_jpeg_path in self.temp_image_paths:
+            os.remove(temp_jpeg_path)
 
     def write_sheet(self,source_template_block_name,target_start_coord='A1',data=None):
         source_position = self.template_position_config[source_template_block_name]
@@ -34,20 +41,46 @@ class XlsxWriter():
         if data is not None:
             src_file_sheet = self._modify_sheet(src_file_sheet,data)
         self._paste_sheet_impl(self.target_sheet,target_start_coord,src_file_sheet,source_position)
-        
-    def add_image(self,image_path, target_cell_coord,image_width=100,image_height=100):
-        # Load the image
-        image = Image(image_path)
+    
+    def _resize_image(self,image, desired_width=-1, desired_height=-1):
+        original_width, original_height = image.width, image.height
+    
+        if desired_width == -1 and desired_height == -1:
+            # Return the original image if no resizing is desired
+            return image
+    
+        if desired_width == -1:
+            # Calculate new width while preserving aspect ratio
+            new_width = int(desired_height * (original_width / original_height))
+            new_height = desired_height
+        elif desired_height == -1:
+            # Calculate new height while preserving aspect ratio
+            new_width = desired_width
+            new_height = int(desired_width * (original_height / original_width))
+        else:
+            # Resize with desired width and height
+            new_width = desired_width
+            new_height = desired_height
 
-        # col_idx,row_idx = coordinate_string_to_index(targesource_sheet_name,source_start_coordt_cell_coord)
-        # col_letter = get_column_letter(col_idx)
-        # cell_width = sheet.column_dimensions[col_letter].width
-        # cell_height = sheet.row_dimensions[row_idx].height
-        image.width = image_width
-        image.height = image_height
+        image.height = new_height
+        image.width = new_width
+    
+    def add_image(self,source_cell_coord, target_cell_coord,image_width=150,image_height=-1):
+        # Put your sheet in the loader
+        image_loader = SheetImageLoader(self.template_sheet)
+        pil_image = image_loader.get(source_cell_coord)
+
+        # Save the PIL image as a temporary JPEG image
+        temp_jpeg_path = "{}_temp_image.jpg".format(str(uuid.uuid4()))
+        pil_image.save(temp_jpeg_path, format="JPEG")
+        
+        # Add the JPEG image to the worksheet
+        image = Image(temp_jpeg_path)
+        self._resize_image(image,desired_width=image_width,desired_height=image_height)
 
         # Add the image to the worksheet
         self.target_sheet.add_image(image, target_cell_coord)
+        self.temp_image_paths.append(temp_jpeg_path)
     
     def _shift_coordinates(self,coord, offset):
         coord_col_idx,coord_row_idx = coordinate_string_to_index(coord)
@@ -121,10 +154,6 @@ class XlsxWriter():
                 get_column_letter(i)
             ].width = original_sheet.column_dimensions[get_column_letter(i)].width
 
-        for img in new_sheet._images:
-            img_copy = Image(img._data)
-            new_sheet.add_image(img_copy, img.anchor)
-    
         return new_sheet
 
     def _paste_sheet_impl(self,target_file_sheet,target_start_coord,src_file_sheet,source_position=None):
@@ -136,9 +165,9 @@ class XlsxWriter():
             src_end_coord = source_position['end_coord']
 
         shift_offset = self._subtract_coordinates(target_start_coord,src_start_coord)
-        start_col, start_row = coordinate_string_to_index(src_start_coord)
-        end_col, end_row = coordinate_string_to_index(src_end_coord)
-        for row in src_file_sheet.iter_rows(min_row=start_row, min_col=start_col, max_row=end_row, max_col=end_col):
+        src_start_col, src_start_row = coordinate_string_to_index(src_start_coord)
+        src_end_col, src_end_row = coordinate_string_to_index(src_end_coord)
+        for row in src_file_sheet.iter_rows(min_row=src_start_row, min_col=src_start_col, max_row=src_end_row, max_col=src_end_col):
             # 遍历源xlsx文件制定sheet中的所有单元格
             for cell in row:  # 复制数据
                 target_cell_coord = self._shift_coordinates(cell.coordinate,shift_offset)
@@ -166,11 +195,11 @@ class XlsxWriter():
                 target_file_sheet.merge_cells(shifted_cell_range)  # 合并单元格
         # 开始处理行高列宽
         col_shift_offset, row_shift_offset = shift_offset
-        for i in range(1, src_file_sheet.max_row + 1):
+        for i in range(src_start_row, src_end_row + 1):
             target_file_sheet.row_dimensions[i+row_shift_offset].height = src_file_sheet.row_dimensions[
                 i
             ].height
-        for i in range(1, src_file_sheet.max_column + 1):
+        for i in range(src_start_col, src_end_col + 1):
             target_file_sheet.column_dimensions[
                 get_column_letter(i+col_shift_offset)
             ].width = src_file_sheet.column_dimensions[get_column_letter(i)].width
@@ -194,7 +223,7 @@ if __name__=='__main__':
     # res = add_coordinates('B12',(0,1))
 
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
-    template_sheet_name = 'calendar'
+    template_sheet_name = 'template'
     target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
     target_sheet_name = 'Sheet'
     image_path = '/home/didi/myproject/tmma/tm_logo.jpg'
@@ -209,16 +238,17 @@ if __name__=='__main__':
 
     template_position_config = {'title_block': {'start_coord':'B2','end_coord':'O8'},'theme_block':{'start_coord':'B9','end_coord':'K11'},'parent_block':{'start_coord':'B12','end_coord':'K12'},'child_block':{'start_coord':'B13','end_coord':'K13'}}
 
-    xlsx_writer = XlsxWriter(template_file,template_sheet_name,target_file,target_sheet_name)
-    xlsx_writer.write_sheet(source_position=template_position_config[title_block],target_start_coord='B2')
-    xlsx_writer.write_sheet(source_position=template_position_config[theme_block],target_start_coord='B9',data={'{theme_name}':'主题：父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
+    xlsx_writer = XlsxWriter(template_file,template_sheet_name,template_position_config,target_file,target_sheet_name)
+    xlsx_writer.write_sheet(source_template_block_name=title_block,target_start_coord='B2')
+    xlsx_writer.write_sheet(source_template_block_name=theme_block,target_start_coord='B9',data={'{theme_name}':'主题：父亲节','{time}':'15:00','{organizer_name}':'林长虹','{SAA_name}':'Leon Lin'})
     cur_start_coord = 'B12'
     for i in range(3):
         cur_start_coord = add_coordinates(cur_start_coord,(0,1))
-        xlsx_writer.write_sheet(source_position=template_position_config[parent_block],target_start_coord=cur_start_coord,data={'{start_time}':'12:01','{event_name}':'开场','{duration}':'8'})
+        xlsx_writer.write_sheet(source_template_block_name=parent_block,target_start_coord=cur_start_coord,data={'{start_time}':'12:01','{event_name}':'开场','{duration}':'8'})
         cur_start_coord = add_coordinates(cur_start_coord,(0,1))
-        xlsx_writer.write_sheet(source_position=template_position_config[child_block],target_start_coord=cur_start_coord,data={'{event_name}':'开场白','{end_time}':'15:01','{duration}':'8','{host_name}':'林长宏'})
+        xlsx_writer.write_sheet(source_template_block_name=child_block,target_start_coord=cur_start_coord,data={'{event_name}':'开场白','{end_time}':'15:01','{duration}':'8','{host_name}':'林长宏'})
     # xlsx_writer.write_sheet('calendar',source_position=template_position_config[rule_block],target_start_coord='L9')
     # xlsx_writer.write_sheet('calendar',source_position=template_position_config[information_block],target_start_coord='L16')
-    xlsx_writer.add_image(image_path, target_cell_coord='B2')
+    xlsx_writer.add_image(source_cell_coord='B2', target_cell_coord='B2',image_width=150)
+    xlsx_writer.add_image(source_cell_coord='O2', target_cell_coord='O2',image_width=150)
     xlsx_writer.save()

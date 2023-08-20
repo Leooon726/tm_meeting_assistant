@@ -90,6 +90,7 @@ class MeetingParser:
         self.role_dict = {}
         self.meeting_info_dict = {}
         self.event_list = []
+        self.project_info = ""
 
     def parse_roles(self, content):
         lines = content.strip().split('\n')
@@ -167,6 +168,12 @@ class MeetingParser:
                 name, info = line.split('：', 1)
                 self.meeting_info_dict[name] = info
 
+    def parse_project_info(self,content):
+        '''
+        Removes the first line and keep the following content.
+        '''
+        self.project_info = content.split('\n', 1)[1]
+
     def parse_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as file:
             content = file.read()
@@ -180,6 +187,8 @@ class MeetingParser:
                 meeting_info_section = section
             elif '【议程表】' in section:
                 agenda_section = section
+            elif '【备稿演讲项目简介】' in section:
+                project_section = section
 
         self.parse_roles(role_section)
 
@@ -187,9 +196,11 @@ class MeetingParser:
 
         self.parse_agenda(agenda_section)
 
+        self.parse_project_info(project_section)
+
     def get_total_event_num(self):
-        cnt = len(event_list)
-        for event in event_list:
+        cnt = len(self.event_list)
+        for event in self.event_list:
             if isinstance(event,ParentEvent):
                 cnt+=len(event.get_child_events())
         return cnt
@@ -204,6 +215,7 @@ if __name__=='__main__':
     event_list = parser.event_list
     meeting_info_dict = parser.meeting_info_dict
     print(meeting_info_dict)
+    print(parser.get_total_event_num())
 
     print("Role Dictionary:")
     print(role_dict)
