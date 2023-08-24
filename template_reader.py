@@ -74,7 +74,12 @@ class XlsxTemplateReader():
 
     def is_pure_text_block(self, template_block_name):
         return len(self.get_field_list(template_block_name)) == 0
-
+    
+    def get_image_coords(self):
+        column_as_key_list = self._read_sheet_as_dict_list()
+        for row_dict in column_as_key_list:
+            if row_dict['block_name'] == 'images':
+                return row_dict['start_coord'].split(',')
 
 if __name__ == '__main__':
     template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
@@ -87,3 +92,4 @@ if __name__ == '__main__':
     print(field_list)
     print(tr.get_template_positions())
     print(tr.is_pure_text_block('contact_block'))
+    print(tr.get_image_coords())

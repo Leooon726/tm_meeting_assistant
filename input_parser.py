@@ -109,7 +109,7 @@ class MeetingParser:
         self.role_dict = {}
         self.meeting_info_dict = {}
         self.event_list = []
-        self.project_info = ""
+        self.project_info = {}
 
     def parse_roles(self, content):
         lines = content.strip().split('\n')
@@ -193,7 +193,7 @@ class MeetingParser:
         '''
         Removes the first line and keep the following content.
         '''
-        self.project_info = content.split('\n', 1)[1]
+        self.project_info = dict(project_info=content.split('\n', 1)[1])
 
     def parse_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as file:
@@ -225,6 +225,9 @@ class MeetingParser:
             if isinstance(event, ParentEvent):
                 cnt += len(event.get_child_events())
         return cnt
+    
+    def get_meeting_start_time(self):
+        return self.meeting_info_dict['开始时间']
 
 
 if __name__ == '__main__':
