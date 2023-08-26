@@ -20,13 +20,11 @@ def _find_data_for_template_fields(field_list, data_dict_list):
     return res_dict
 
 class ExcelAgendaEngine():
-    def __init__(self):
-        user_input_txt_file_path="/home/didi/myproject/tmma/user_input.txt"
+    def __init__(self,user_input_txt_file_path="/home/didi/myproject/tmma/user_input.txt",target_file_path='/home/didi/myproject/tmma/generated_calendar.xlsx'):
         output_excel_config='/home/didi/myproject/tmma/config.yaml'
         template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
         template_sheet_name = 'template'
         template_position_sheet_name = 'template_position'
-        target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
         target_sheet_name = 'Sheet'
 
 
@@ -58,7 +56,7 @@ class ExcelAgendaEngine():
 
         # Create excel writer.
         self.xlsx_writer = xw.XlsxWriter(template_file, template_sheet_name,
-                                self.template_position_config, target_file,
+                                self.template_position_config, target_file_path,
                                 target_sheet_name)
         
     def _write_fixed_block(self,block_name):
@@ -113,6 +111,7 @@ class ExcelAgendaEngine():
             self._write_fixed_block(block_name)
 
         self._write_images()
+        self.xlsx_writer.save()
 
 if __name__ == '__main__':
     # TODO: fix project info writing.

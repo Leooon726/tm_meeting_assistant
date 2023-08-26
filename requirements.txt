@@ -1,0 +1,4 @@
+Flask==2.2.5
+openpyxl==3.1.2
+openpyxl_image_loader==1.0.5
+PyYAML==6.0.1
