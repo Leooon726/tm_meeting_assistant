@@ -1,32 +1,26 @@
+'''
+Example:
+python3 main.py -i /home/lighthouse/tm_meeting_assistant/user_input.txt -o /home/lighthouse/tm_meeting_assistant/generated_calendar.xlsx -c /home/lighthouse/tm_meeting_assistant/engine_config.yaml
+'''
+import argparse
+
 from input_parser import MeetingParser, ParentEvent, NoticeEvent
-from config_reader import PositionCalculator
+from config_reader import ConfigReader
+from block_position_calculator import PositionCalculator
 import xlsx_writer as xw
 from template_reader import XlsxTemplateReader
 from excel_utils import add_coordinates
 
-
-def _find_data_for_template_fields(field_list, data_dict_list):
-    def _find_data_for_field_key(field_key):
-        for data_dict in data_dict_list:
-            if field_key in data_dict:
-                return data_dict[field_key]
-        raise AttributeError('key {} not found.'.format(field_key))
-
-    res_dict = {}
-    for field_name in field_list:
-        assert field_name.startswith('{') and field_name.endswith('}')
-        field_key = field_name[1:-1]
-        res_dict[field_name] = _find_data_for_field_key(field_key)
-    return res_dict
-
 class ExcelAgendaEngine():
-    def __init__(self,user_input_txt_file_path="/home/didi/myproject/tmma/user_input.txt",target_file_path='/home/didi/myproject/tmma/generated_calendar.xlsx'):
-        output_excel_config='/home/didi/myproject/tmma/config.yaml'
-        template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
-        template_sheet_name = 'template'
-        template_position_sheet_name = 'template_position'
-        target_sheet_name = 'Sheet'
+    def __init__(self,user_input_txt_file_path,target_file_path,config_path):
+        cr = ConfigReader(config_path)
+        config = cr.get_config()
 
+        block_position_config_path = config['block_position_config']
+        template_file = config['template_excel']
+        template_sheet_name = config['template_sheet_name']
+        template_position_sheet_name = config['template_position_sheet_name']
+        target_sheet_name = config['target_sheet_name']
 
         # Parse all the user input.
         self.user_input_parser = MeetingParser()
@@ -37,7 +31,6 @@ class ExcelAgendaEngine():
         project_info = self.user_input_parser.project_info
         self.data_dict_list = [role_dict, meeting_info_dict, project_info]
 
-
         # time calcuation.
         cur_time = self.user_input_parser.get_meeting_start_time()
         for parent_event in self.event_list:
@@ -45,7 +38,7 @@ class ExcelAgendaEngine():
             cur_time = parent_event.get_end_time()
 
         # Calculate the block start coord.
-        block_position_calculator = PositionCalculator(output_excel_config)
+        block_position_calculator = PositionCalculator(block_position_config_path)
         block_position_calculator.set_schedule_block_height(self.user_input_parser.get_total_event_num())
         self.block_start_coord_dict = block_position_calculator.get_start_coords()
         
@@ -59,6 +52,21 @@ class ExcelAgendaEngine():
                                 self.template_position_config, target_file_path,
                                 target_sheet_name)
         
+    @staticmethod
+    def _find_data_for_template_fields(field_list, data_dict_list):
+        def _find_data_for_field_key(field_key):
+            for data_dict in data_dict_list:
+                if field_key in data_dict:
+                    return data_dict[field_key]
+            raise AttributeError('key {} not found.'.format(field_key))
+    
+        res_dict = {}
+        for field_name in field_list:
+            assert field_name.startswith('{') and field_name.endswith('}')
+            field_key = field_name[1:-1]
+            res_dict[field_name] = _find_data_for_field_key(field_key)
+        return res_dict
+
     def _write_fixed_block(self,block_name):
         self.xlsx_writer.write_sheet(
             source_template_block_name=block_name,
@@ -66,7 +74,7 @@ class ExcelAgendaEngine():
 
     def _write_variable_block(self,block_name):
         fields_to_write = self.template_reader.get_field_list(block_name)
-        block_data = _find_data_for_template_fields(
+        block_data = self._find_data_for_template_fields(
             fields_to_write, self.data_dict_list)
         self.xlsx_writer.write_sheet(source_template_block_name=block_name,
                                 target_start_coord=self.block_start_coord_dict[block_name],
@@ -114,9 +122,17 @@ class ExcelAgendaEngine():
         self.xlsx_writer.save()
 
 if __name__ == '__main__':
-    # TODO: fix project info writing.
+    parser = argparse.ArgumentParser(description='Process configuration path for Excel Agenda Engine')
+    parser.add_argument('-i','--input', dest='user_input_txt', type=str, required=True,
+                        help='Path to the input txt file')
+    parser.add_argument('-o','--output', dest='output_excel', type=str, required=True,
+                        help='Path to the output excel file')
+    parser.add_argument('-c','--config', dest='config_path', type=str, required=True,
+                        help='Path to the configuration file')
+    args = parser.parse_args()
+
     import sys
-    engine = ExcelAgendaEngine()
+    engine = ExcelAgendaEngine(args.user_input_txt,args.output_excel,args.config_path)
     engine.write()
     sys.exit()
 
@@ -131,7 +147,7 @@ if __name__ == '__main__':
         parent_event.calculate_time(cur_time)
         cur_time = parent_event.get_end_time()
 
-    pc = PositionCalculator('/home/didi/myproject/tmma/config.yaml')
+    pc = PositionCalculator('/home/didi/myproject/tmma/block_position_config.yaml')
     pc.set_schedule_block_height(parser.get_total_event_num())
     start_coord_dict = pc.get_start_coords()
     # print(start_coord_dict)
@@ -205,7 +221,6 @@ if __name__ == '__main__':
     xlsx_writer.write_sheet(
         source_template_block_name='information_block',
         target_start_coord=start_coord_dict['information_block'])
-    # TODO: make image coord configable.
     xlsx_writer.add_image(source_cell_coord='A1',
                           target_cell_coord='A1',
                           image_width=150)
