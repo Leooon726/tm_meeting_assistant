@@ -8,10 +8,38 @@ class PositionCalculator:
         self.config = cr.get_config()
         self.start_coord_idx_dict = {}
 
+    def set_block_size_base_on_template_block(self,template_block_size_dict):
+        def set_width_if_not_exist(template_block_name,template_block_size):
+            if 'width' not in self.config:
+                self.config[template_block_name]['width'] = template_block_size['width']
+
+        def set_height_if_not_exist(template_block_name,template_block_size):
+            if 'height' not in self.config:
+                self.config[template_block_name]['height'] = template_block_size['height']
+
+        for template_block_name, template_block_size in template_block_size_dict.items():
+            # schedule_block is an exception, it only exists in block to be written, and stacks vertially with parent template block and child template block. So they have the same width.
+            if template_block_name == 'parent_block' and 'schedule_block' in self.config:
+                set_width_if_not_exist('schedule_block',template_block_size)
+                continue
+            if template_block_name not in self.config:
+                continue
+            set_width_if_not_exist(template_block_name,template_block_size)
+            set_height_if_not_exist(template_block_name,template_block_size)
+
     def set_schedule_block_height(self, height):
+        '''
+        THe schedule block height depends on how many events in the meeting, it should be derived from user input.
+        '''
         self.config['schedule_block']['height'] = height
 
+    def _check_if_all_block_size_exist(self):
+        for block_name, block_data in self.config.items():
+            assert 'height' in block_data, f"Height field is not in {block_name}"
+            assert 'width' in block_data, f"Width field is not in {block_name}"
+
     def get_start_coords(self):
+        self._check_if_all_block_size_exist()
         self._calcuate_start_coords()
         start_coord_dict = {}
         for block_name, start_coord_idx in self.start_coord_idx_dict.items():
@@ -25,7 +53,7 @@ class PositionCalculator:
                 self.start_coord_idx_dict[key] = coordinate_string_to_index(
                     value['coordinate'])
             else:
-                start_coord = self.calculate_start_coord(
+                start_coord = self._calculate_start_coord(
                     self.start_coord_idx_dict, key, value)
                 self.start_coord_idx_dict[key] = start_coord
 
@@ -53,7 +81,7 @@ class PositionCalculator:
                     constraint_object_start_row, constraint_object_height)
         return size_dict
 
-    def calculate_start_coord(self, start_coord_dict, subject_name,
+    def _calculate_start_coord(self, start_coord_dict, subject_name,
                               coord_constraint):
         column_ref_object = coord_constraint['column_position']['object']
         column_ref_object_start_col_idx, _ = start_coord_dict[
@@ -147,10 +175,9 @@ class PositionCalculator:
 
 
 if __name__ == '__main__':
-    # col_size, row_size
-    # block_size_dict = {'title_block':(2,1),'theme_block':(2,2),'schedule_block':(2,10)}
-
-    pc = PositionCalculator('/home/didi/myproject/tmma/block_position_config.yaml')
+    pc = PositionCalculator('/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/block_position_config.yaml')
+    simulated_template_block_size_dict = {'title_block': {'width': 14, 'height': 7}, 'theme_block': {'width': 10, 'height': 3}, 'parent_block': {'width': 10, 'height': 1}, 'child_block': {'width': 10, 'height': 1}, 'notice_block': {'width': 10, 'height': 1}, 'rule_block': {'width': 4, 'height': 7}, 'information_block': {'width': 4, 'height': 22}, 'contact_block': {'width': 4, 'height': 9}, 'project_block': {'width': 4, 'height': 3}}
+    pc.set_block_size_base_on_template_block(simulated_template_block_size_dict)
     pc.set_schedule_block_height(43)
     start_coord_dict = pc.get_start_coords()
     print(start_coord_dict)

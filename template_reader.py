@@ -1,6 +1,8 @@
+import re
+
 from openpyxl import load_workbook
 
-from excel_utils import coordinate_string_to_index, add_coordinates, get_left_top_coordinate, get_sheet_dimensions, get_right_bottom_coordinate
+from excel_utils import calculate_block_size,coordinate_string_to_index, add_coordinates, get_left_top_coordinate, get_sheet_dimensions, get_right_bottom_coordinate
 
 
 class XlsxTemplateReader():
@@ -12,9 +14,28 @@ class XlsxTemplateReader():
         self.template_position_sheet = self.template_workbook[
             position_sheet_name]
         self.template_block_position_dict = self._calculate_block_position()
+        self.template_block_size_dict = self._calcuate_block_sizes()
 
     def __exit__(self):
         self.template_workbook.close()
+
+    @staticmethod
+    def is_legal_coord(coord):
+        if not isinstance(coord,str) or coord is None:
+            return False
+        if ',' in coord:
+            return False
+        pattern = r'^[A-Z]{1,2}[0-9]+$'
+        return bool(re.match(pattern, coord))
+
+    def _calcuate_block_sizes(self):
+        size_dict = {}
+        for block_name,block_position  in self.template_block_position_dict.items():
+            if not self.is_legal_coord(block_position['start_coord']) or not self.is_legal_coord(block_position['end_coord']):
+                continue
+            w,h = calculate_block_size(block_position['start_coord'],block_position['end_coord'])
+            size_dict[block_name] = dict(width=w,height=h)
+        return size_dict
 
     @staticmethod
     def _extract_field(input_string):
@@ -60,6 +81,11 @@ class XlsxTemplateReader():
         return column_as_key_list
 
     def _calculate_block_position(self):
+        '''
+        return a double-layered dict, like:
+        {'title_block': {'start_coord': 'A1', 'end_coord': 'N7'}, 
+        'theme_block': {'start_coord': 'A8', 'end_coord': 'J10'}}
+        '''
         column_as_key_list = self._read_sheet_as_dict_list()
         result_dict = {}
         for item in column_as_key_list:
@@ -68,6 +94,9 @@ class XlsxTemplateReader():
                 'end_coord': item['end_coord']
             }
         return result_dict
+
+    def get_template_block_sizes(self):
+        return self.template_block_size_dict
 
     def get_template_positions(self):
         return self.template_block_position_dict
@@ -82,14 +111,18 @@ class XlsxTemplateReader():
                 return row_dict['start_coord'].split(',')
 
 if __name__ == '__main__':
-    template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
+    template_file = '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/jabil_jouse_template_for_print.xlsx'
     template_sheet_name = 'template'
     template_position_sheet_name = 'template_position'
 
     tr = XlsxTemplateReader(template_file, template_sheet_name,
                             template_position_sheet_name)
+    print(tr.template_block_size_dict)
+    input()
+
     field_list = tr.get_field_list('contact_block')
-    print(field_list)
+    assert field_list == []
+    
     print(tr.get_template_positions())
     print(tr.is_pure_text_block('contact_block'))
     print(tr.get_image_coords())

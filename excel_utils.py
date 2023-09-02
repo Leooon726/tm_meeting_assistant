@@ -41,3 +41,15 @@ def get_sheet_dimensions(sheet):
     width = sheet.max_column - sheet.min_column + 1
     height = sheet.max_row - sheet.min_row + 1
     return width, height
+
+
+def calculate_block_size(start_coord,end_coord):
+    '''
+    start_coord and end_coord are like A10.
+    '''
+    start_col, start_row = coordinate_string_to_index(start_coord)
+    end_col, end_row = coordinate_string_to_index(end_coord)
+    return end_col-start_col+1,end_row-start_row+1
+
+if __name__ == '__main__':
+    assert calculate_block_size('A1','B1') == (2,1)

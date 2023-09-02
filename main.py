@@ -11,11 +11,39 @@ import xlsx_writer as xw
 from template_reader import XlsxTemplateReader
 from excel_utils import add_coordinates
 
+
+def _get_all_block_names(block_position_config_path):
+    cr = ConfigReader(block_position_config_path)
+    config = cr.get_config()
+    block_names = list(config.keys())
+    # image block is not mentioned in block_position_config_path, so we need to add it manually.
+    block_names+=['images']
+    return block_names
+
 class ExcelAgendaEngine():
+    '''
+    This class is used to create a excel agenda with multiple sheets.
+    '''
     def __init__(self,user_input_txt_file_path,target_file_path,config_path):
         cr = ConfigReader(config_path)
         config = cr.get_config()
 
+        self.sheet_engines = []
+        for target_sheet_config_dict in config['target_sheets']:
+            sheet_dict = target_sheet_config_dict
+            sheet_dict['template_excel'] = config['template_excel']
+            self.sheet_engines.append(ExcelAgendaSheetEngine(user_input_txt_file_path,target_file_path,target_sheet_config_dict))
+
+    def write(self):
+        for sheet_engine in self.sheet_engines:
+            sheet_engine.write()
+
+
+class ExcelAgendaSheetEngine():
+    '''
+    This class is used to create a excel sheet of agenda.
+    '''
+    def __init__(self,user_input_txt_file_path,target_file_path,config):
         block_position_config_path = config['block_position_config']
         template_file = config['template_excel']
         template_sheet_name = config['template_sheet_name']
@@ -37,21 +65,26 @@ class ExcelAgendaEngine():
             parent_event.calculate_time(cur_time)
             cur_time = parent_event.get_end_time()
 
-        # Calculate the block start coord.
-        block_position_calculator = PositionCalculator(block_position_config_path)
-        block_position_calculator.set_schedule_block_height(self.user_input_parser.get_total_event_num())
-        self.block_start_coord_dict = block_position_calculator.get_start_coords()
-        
         # Create template reader.
         self.template_reader = XlsxTemplateReader(template_file, template_sheet_name,
                                 template_position_sheet_name)
         self.template_position_config = self.template_reader.get_template_positions()
+        template_block_size_dict = self.template_reader.get_template_block_sizes()
+
+        # Calculate the block start coord.
+        block_position_calculator = PositionCalculator(block_position_config_path)
+        # Most of the block size to be written have the same size as template blocks, so we can get the block sizes by template_block_size_dict
+        block_position_calculator.set_block_size_base_on_template_block(template_block_size_dict)
+        block_position_calculator.set_schedule_block_height(self.user_input_parser.get_total_event_num())
+        self.block_start_coord_dict = block_position_calculator.get_start_coords()
 
         # Create excel writer.
         self.xlsx_writer = xw.XlsxWriter(template_file, template_sheet_name,
                                 self.template_position_config, target_file_path,
                                 target_sheet_name)
         
+        self.block_names_to_be_written = _get_all_block_names(block_position_config_path)
+
     @staticmethod
     def _find_data_for_template_fields(field_list, data_dict_list):
         def _find_data_for_field_key(field_key):
@@ -107,19 +140,26 @@ class ExcelAgendaEngine():
                                         target_cell_coord=image_coord,
                                         image_width=150)
 
+    def _is_fixed_block(self,block_name):
+        '''
+        If there is no field to be filled, then it is a fixed block.
+        '''
+        return self.template_reader.is_pure_text_block(block_name)
+
     def write(self):
-        variable_block_list = ['title_block','theme_block','project_block']
-        for block_name in variable_block_list:
-            self._write_variable_block(block_name)
-
-        self._write_schedule_block()
-
-        fixed_block_list = ['contact_block','rule_block','information_block']
-        for block_name in fixed_block_list:
-            self._write_fixed_block(block_name)
-
-        self._write_images()
+        # TODO: merge cells if the template size is smaller than actual block size.
+        # xlsx_writer.merge_cells(start_coord='K25', end_coord='N32')
+        for block_name in self.block_names_to_be_written:
+            if block_name == 'schedule_block':
+                self._write_schedule_block()
+            elif block_name == 'images':
+                self._write_images()
+            elif self._is_fixed_block(block_name):
+                self._write_fixed_block(block_name)
+            else:
+                self._write_variable_block(block_name)
         self.xlsx_writer.save()
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process configuration path for Excel Agenda Engine')
@@ -134,97 +174,3 @@ if __name__ == '__main__':
     import sys
     engine = ExcelAgendaEngine(args.user_input_txt,args.output_excel,args.config_path)
     engine.write()
-    sys.exit()
-
-    parser = MeetingParser()
-    parser.parse_file("/home/didi/myproject/tmma/user_input.txt")
-    event_list = parser.event_list
-    role_dict = parser.role_dict
-    meeting_info_dict = parser.meeting_info_dict
-
-    cur_time = meeting_info_dict['开始时间']
-    for parent_event in event_list:
-        parent_event.calculate_time(cur_time)
-        cur_time = parent_event.get_end_time()
-
-    pc = PositionCalculator('/home/didi/myproject/tmma/block_position_config.yaml')
-    pc.set_schedule_block_height(parser.get_total_event_num())
-    start_coord_dict = pc.get_start_coords()
-    # print(start_coord_dict)
-    # print(pc.calculate_sizes())
-
-    template_file = '/home/didi/myproject/tmma/tm_303_calendar.xlsx'
-    template_sheet_name = 'template'
-    template_position_sheet_name = 'template_position'
-    target_file = '/home/didi/myproject/tmma/generated_calendar.xlsx'
-    target_sheet_name = 'Sheet'
-    image_path = '/home/didi/myproject/tmma/tm_logo.jpg'
-
-    theme_block = 'theme_block'
-    parent_event_template = 'parent_event'
-    child_event_template = 'child_event'
-    notice_event_template = 'notice_block'
-    rule_block = 'rule_block'
-    information_block = 'information_block'
-
-    tr = XlsxTemplateReader(template_file, template_sheet_name,
-                            template_position_sheet_name)
-
-    template_position_config = tr.get_template_positions()
-
-    xlsx_writer = xw.XlsxWriter(template_file, template_sheet_name,
-                                template_position_config, target_file,
-                                target_sheet_name)
-    field_list = tr.get_field_list('title_block')
-    title_block_data = _find_data_for_template_fields(
-        field_list, [role_dict, meeting_info_dict])
-    xlsx_writer.write_sheet(source_template_block_name='title_block',
-                            target_start_coord=start_coord_dict['title_block'],
-                            data=title_block_data)
-
-    field_list = tr.get_field_list('theme_block')
-    theme_block_data = _find_data_for_template_fields(
-        field_list, [role_dict, meeting_info_dict])
-    xlsx_writer.write_sheet(source_template_block_name='theme_block',
-                            target_start_coord=start_coord_dict['theme_block'],
-                            data=theme_block_data)
-
-    cur_start_coord = start_coord_dict['schedule_block']
-    for event in event_list:
-        if isinstance(event, NoticeEvent):
-            xlsx_writer.write_sheet(source_template_block_name='notice_block',
-                                    target_start_coord=cur_start_coord,
-                                    data=event.get_event())
-            cur_start_coord = add_coordinates(cur_start_coord, (0, 1))
-        elif isinstance(event, ParentEvent):
-            xlsx_writer.write_sheet(source_template_block_name='parent_block',
-                                    target_start_coord=cur_start_coord,
-                                    data=event.get_parent_event())
-            cur_start_coord = add_coordinates(cur_start_coord, (0, 1))
-            for child_event in event.get_child_events():
-                xlsx_writer.write_sheet(
-                    source_template_block_name='child_block',
-                    target_start_coord=cur_start_coord,
-                    data=child_event)
-                cur_start_coord = add_coordinates(cur_start_coord, (0, 1))
-    xlsx_writer.write_sheet(
-        source_template_block_name='contact_block',
-        target_start_coord=start_coord_dict['contact_block'])
-    # TODO: merge cells if the template size is smaller than actual block size.
-    xlsx_writer.write_sheet(
-        source_template_block_name='project_block',
-        target_start_coord=start_coord_dict['project_block'],
-        data={'{project_info}': parser.project_info})
-    xlsx_writer.merge_cells(start_coord='K25', end_coord='N32')
-    xlsx_writer.write_sheet(source_template_block_name='rule_block',
-                            target_start_coord=start_coord_dict['rule_block'])
-    xlsx_writer.write_sheet(
-        source_template_block_name='information_block',
-        target_start_coord=start_coord_dict['information_block'])
-    xlsx_writer.add_image(source_cell_coord='A1',
-                          target_cell_coord='A1',
-                          image_width=150)
-    xlsx_writer.add_image(source_cell_coord='M1',
-                          target_cell_coord='M1',
-                          image_width=150)
-    xlsx_writer.save()

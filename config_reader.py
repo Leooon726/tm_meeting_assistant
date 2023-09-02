@@ -13,3 +13,8 @@ class ConfigReader:
 
     def get_config(self):
         return self.config
+
+if __name__ == '__main__':
+    cr = ConfigReader('/home/lighthouse/agenda_template_zoo/jabil_jouse_template_for_print/engine_config.yaml')
+    config = cr.get_config()
+    print(config)
