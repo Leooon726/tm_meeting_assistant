@@ -2,7 +2,7 @@
 Example:
 python3 main.py -i /home/lighthouse/tm_meeting_assistant/user_input.txt -o /home/lighthouse/tm_meeting_assistant/generated_calendar.xlsx -c /home/lighthouse/tm_meeting_assistant/engine_config.yaml
 '''
-import argparse
+import argparse,os
 
 from input_parser import MeetingParser, ParentEvent, NoticeEvent
 from config_reader import ConfigReader
@@ -25,17 +25,20 @@ class ExcelAgendaEngine():
     This class is used to create a excel agenda with multiple sheets.
     '''
     def __init__(self,user_input_txt_file_path,target_file_path,config_path):
-        cr = ConfigReader(config_path)
-        config = cr.get_config()
+        self.user_input_txt_file_path = user_input_txt_file_path
+        self.target_file_path = target_file_path
+        # Check if the target file exists
+        if os.path.exists(self.target_file_path):
+            os.remove(self.target_file_path)
 
-        self.sheet_engines = []
-        for target_sheet_config_dict in config['target_sheets']:
-            sheet_dict = target_sheet_config_dict
-            sheet_dict['template_excel'] = config['template_excel']
-            self.sheet_engines.append(ExcelAgendaSheetEngine(user_input_txt_file_path,target_file_path,target_sheet_config_dict))
+        cr = ConfigReader(config_path)
+        self.config = cr.get_config()
 
     def write(self):
-        for sheet_engine in self.sheet_engines:
+        for target_sheet_config_dict in self.config['target_sheets']:
+            sheet_dict = target_sheet_config_dict
+            sheet_dict['template_excel'] = self.config['template_excel']
+            sheet_engine = ExcelAgendaSheetEngine(self.user_input_txt_file_path,self.target_file_path,target_sheet_config_dict)
             sheet_engine.write()
 
 
@@ -91,7 +94,7 @@ class ExcelAgendaSheetEngine():
             for data_dict in data_dict_list:
                 if field_key in data_dict:
                     return data_dict[field_key]
-            raise AttributeError('key {} not found.'.format(field_key))
+            raise AttributeError('Cannot find data for the field to be filled {}.'.format(field_key))
     
         res_dict = {}
         for field_name in field_list:
@@ -137,8 +140,7 @@ class ExcelAgendaSheetEngine():
         image_coords = self.template_reader.get_image_coords()
         for image_coord in image_coords:
             self.xlsx_writer.add_image(source_cell_coord=image_coord,
-                                        target_cell_coord=image_coord,
-                                        image_width=150)
+                                        target_cell_coord=image_coord)
 
     def _is_fixed_block(self,block_name):
         '''
@@ -153,7 +155,8 @@ class ExcelAgendaSheetEngine():
             if block_name == 'schedule_block':
                 self._write_schedule_block()
             elif block_name == 'images':
-                self._write_images()
+                pass
+                # self._write_images()
             elif self._is_fixed_block(block_name):
                 self._write_fixed_block(block_name)
             else:
@@ -171,6 +174,5 @@ if __name__ == '__main__':
                         help='Path to the configuration file')
     args = parser.parse_args()
 
-    import sys
     engine = ExcelAgendaEngine(args.user_input_txt,args.output_excel,args.config_path)
     engine.write()

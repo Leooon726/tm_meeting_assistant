@@ -111,18 +111,22 @@ class XlsxTemplateReader():
                 return row_dict['start_coord'].split(',')
 
 if __name__ == '__main__':
-    template_file = '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/jabil_jouse_template_for_print.xlsx'
-    template_sheet_name = 'template'
-    template_position_sheet_name = 'template_position'
+    # template_file = '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/jabil_jouse_template_for_print.xlsx'
+    # template_sheet_name = 'template'
+    # template_position_sheet_name = 'template_position'
+    template_file = '/home/lighthouse/agenda_template_zoo/huangpu_rise_template_for_print/huangpu_rise_template_for_print.xlsx'
+    template_sheet_name = 'page1'
+    template_position_sheet_name = 'page1_block_position'
 
     tr = XlsxTemplateReader(template_file, template_sheet_name,
                             template_position_sheet_name)
     print(tr.template_block_size_dict)
-    input()
 
     field_list = tr.get_field_list('contact_block')
     assert field_list == []
     
+    field_list = tr.get_field_list('title_block')
+    print(field_list)
     print(tr.get_template_positions())
     print(tr.is_pure_text_block('contact_block'))
     print(tr.get_image_coords())

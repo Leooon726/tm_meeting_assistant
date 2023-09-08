@@ -16,3 +16,7 @@ python3 main.py -i /home/lighthouse/tm_meeting_assistant/example/output_files/us
 {duration}
 {end_time}
 {host_name}
+
+3. The fields of notice event block should be:
+{time}
+{notice}

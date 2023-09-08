@@ -31,6 +31,8 @@ class PositionCalculator:
         '''
         THe schedule block height depends on how many events in the meeting, it should be derived from user input.
         '''
+        if 'schedule_block' not in self.config:
+            return
         self.config['schedule_block']['height'] = height
 
     def _check_if_all_block_size_exist(self):

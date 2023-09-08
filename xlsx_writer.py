@@ -1,5 +1,8 @@
 import os
 import uuid
+from os.path import isfile
+import tempfile
+import shutil
 
 from openpyxl.cell import Cell
 from openpyxl.utils import get_column_letter
@@ -9,10 +12,9 @@ from openpyxl import Workbook, load_workbook
 from copy import copy, deepcopy
 from openpyxl.utils.cell import coordinate_from_string, get_column_letter, column_index_from_string, range_boundaries
 from openpyxl.drawing.image import Image
-from openpyxl_image_loader import SheetImageLoader
 
-from excel_utils import coordinate_string_to_index, add_coordinates, get_left_top_coordinate, get_sheet_dimensions, get_right_bottom_coordinate
-
+from excel_utils import get_merged_cell_size,coordinate_string_to_index, add_coordinates, get_left_top_coordinate, get_sheet_dimensions, get_right_bottom_coordinate,is_cell_in_block,subtract_coordinates
+from xlsx_image_writer import XlsxBlockImageWriter
 
 class XlsxWriter():
 
@@ -22,8 +24,17 @@ class XlsxWriter():
         self.template_workbook = load_workbook(template_xlsx_file_path)
         self.template_sheet = self.template_workbook[template_sheet_name]
         self.template_position_config = template_position_config
-        self.target_workbook = Workbook(
-        )  # Create a new workbook if the target doesn't exist
+
+        if isfile(target_xlsx_file_path):
+            # If the file exists, load the existing workbook
+            self.target_workbook = load_workbook(target_xlsx_file_path)
+        else:
+            # If the file doesn't exist, create a new workbook
+            self.target_workbook = Workbook()
+            # And delete the default sheet.
+            default_sheet = self.target_workbook.active
+            self.target_workbook.remove(default_sheet)
+
         self.target_xlsx_file_path = target_xlsx_file_path
         self.temp_image_paths = []
         # Create or get the sheet with the desired sheet name
@@ -33,12 +44,17 @@ class XlsxWriter():
             self.target_sheet = self.target_workbook.create_sheet(
                 target_sheet_name)
 
+        self.temp_dir = tempfile.mkdtemp()
+
     def save(self):
         self.target_workbook.save(self.target_xlsx_file_path)  # 保存
         self.target_workbook.close()  # 关闭文件
         self.template_workbook.close()
-        for temp_jpeg_path in self.temp_image_paths:
-            os.remove(temp_jpeg_path)
+
+        if self.temp_dir:
+            # Remove the temporary directory and all its contents
+            shutil.rmtree(self.temp_dir)
+            self.temp_dir = None
 
     def write_sheet(self,
                     source_template_block_name,
@@ -53,53 +69,9 @@ class XlsxWriter():
         self._paste_sheet_impl(self.target_sheet, target_start_coord,
                                src_file_sheet, source_position)
 
-    def _resize_image(self, image, desired_width=-1, desired_height=-1):
-        original_width, original_height = image.width, image.height
-
-        if desired_width == -1 and desired_height == -1:
-            # Return the original image if no resizing is desired
-            return image
-
-        if desired_width == -1:
-            # Calculate new width while preserving aspect ratio
-            new_width = int(desired_height *
-                            (original_width / original_height))
-            new_height = desired_height
-        elif desired_height == -1:
-            # Calculate new height while preserving aspect ratio
-            new_width = desired_width
-            new_height = int(desired_width *
-                             (original_height / original_width))
-        else:
-            # Resize with desired width and height
-            new_width = desired_width
-            new_height = desired_height
-
-        image.height = new_height
-        image.width = new_width
-
-    def add_image(self,
-                  source_cell_coord,
-                  target_cell_coord,
-                  image_width=150,
-                  image_height=-1):
-        # Put your sheet in the loader
-        image_loader = SheetImageLoader(self.template_sheet)
-        pil_image = image_loader.get(source_cell_coord)
-
-        # Save the PIL image as a temporary JPEG image
-        temp_jpeg_path = "{}_temp_image.jpg".format(str(uuid.uuid4()))
-        pil_image.save(temp_jpeg_path, format="JPEG")
-
-        # Add the JPEG image to the worksheet
-        image = Image(temp_jpeg_path)
-        self._resize_image(image,
-                           desired_width=image_width,
-                           desired_height=image_height)
-
-        # Add the image to the worksheet
-        self.target_sheet.add_image(image, target_cell_coord)
-        self.temp_image_paths.append(temp_jpeg_path)
+        # write images.
+        image_writer = XlsxBlockImageWriter(self.template_sheet,source_position,target_start_coord,self.temp_dir)
+        self.target_sheet = image_writer.write(self.target_sheet)
 
     def _shift_coordinates(self, coord, offset):
         coord_col_idx, coord_row_idx = coordinate_string_to_index(coord)
@@ -120,19 +92,6 @@ class XlsxWriter():
         result_coord2 = get_column_letter(result_tuple2[0]) + str(
             result_tuple2[1])  # Convert the result back to a coordinate string
         return '{}:{}'.format(result_coord1, result_coord2)
-
-    def _is_cell_in_block(self, src_start_coord, src_end_coord,
-                          coord_to_check):
-        min_col_idx, min_row_idx = coordinate_string_to_index(src_start_coord)
-        max_col_idx, max_row_idx = coordinate_string_to_index(src_end_coord)
-        cell_col_idx, cell_row_idx = coordinate_string_to_index(coord_to_check)
-        return min_col_idx <= cell_col_idx <= max_col_idx and min_row_idx <= cell_row_idx <= max_row_idx
-
-    def _subtract_coordinates(self, coord1, coord2):
-        coord1_col_idx, coord1_row_idx = coordinate_string_to_index(coord1)
-        coord2_col_idx, coord2_row_idx = coordinate_string_to_index(coord2)
-        return (coord1_col_idx - coord2_col_idx,
-                coord1_row_idx - coord2_row_idx)
 
     def _copy_sheet_impl(self, original_sheet, source_position=None):
         if source_position is None:
@@ -198,7 +157,7 @@ class XlsxWriter():
             src_start_coord = source_position['start_coord']
             src_end_coord = source_position['end_coord']
 
-        shift_offset = self._subtract_coordinates(target_start_coord,
+        shift_offset = subtract_coordinates(target_start_coord,
                                                   src_start_coord)
         src_start_col, src_start_row = coordinate_string_to_index(
             src_start_coord)
@@ -211,7 +170,13 @@ class XlsxWriter():
             for cell in row:  # 复制数据
                 target_cell_coord = self._shift_coordinates(
                     cell.coordinate, shift_offset)
-                target_file_sheet[target_cell_coord].value = cell.value
+                # It would fail to write if the target cell is a merged cell which is read-only.
+                try:
+                    target_file_sheet[target_cell_coord].value = cell.value
+                except:
+                    # TODO: only capture read-only-error and print it.
+                    pass
+                    # print('Fail to write data for coord: ',target_cell_coord, ' with data: ',cell.value)
                 if cell.has_style:  # 复制样式
                     target_file_sheet[target_cell_coord].font = copy(cell.font)
                     target_file_sheet[target_cell_coord].border = copy(
@@ -231,9 +196,9 @@ class XlsxWriter():
                                                  "").replace(">,)",
                                                              ""))  # 获取合并单元格的范围
                 begin_coord, end_coord = cell_range.split(':')
-                if not self._is_cell_in_block(
+                if not is_cell_in_block(
                         src_start_coord, src_end_coord,
-                        begin_coord) and not self._is_cell_in_block(
+                        begin_coord) and not is_cell_in_block(
                             src_start_coord, src_end_coord, end_coord):
                     continue
                 shifted_cell_range = self._shift_range(cell_range,
@@ -260,7 +225,7 @@ class XlsxWriter():
                 for col_num in range(1, max_column + 1):
                     cell = sheet.cell(row=row_num, column=col_num)
                     cell_value = cell.value
-                    if cell_value is not None and key in cell_value:
+                    if cell_value is not None and isinstance(cell_value,str) and key in cell_value:
                         cell.value = cell.value.replace(key, str(value))
         return sheet
 
