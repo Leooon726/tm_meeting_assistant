@@ -15,6 +15,7 @@ from openpyxl.drawing.image import Image
 
 from excel_utils import get_merged_cell_size,coordinate_string_to_index, add_coordinates, get_left_top_coordinate, get_sheet_dimensions, get_right_bottom_coordinate,is_cell_in_block,subtract_coordinates
 from xlsx_image_writer import XlsxBlockImageWriter
+from sheet_image_loader import SheetImageLoader
 
 class XlsxWriter():
 
@@ -46,6 +47,8 @@ class XlsxWriter():
 
         self.temp_dir = tempfile.mkdtemp()
 
+        self.template_image_loader = SheetImageLoader(self.template_sheet,self.temp_dir)
+
     def save(self):
         self.target_workbook.save(self.target_xlsx_file_path)  # 保存
         self.target_workbook.close()  # 关闭文件
@@ -70,7 +73,7 @@ class XlsxWriter():
                                src_file_sheet, source_position)
 
         # write images.
-        image_writer = XlsxBlockImageWriter(self.template_sheet,source_position,target_start_coord,self.temp_dir)
+        image_writer = XlsxBlockImageWriter(self.template_sheet,source_position,target_start_coord,self.template_image_loader)
         self.target_sheet = image_writer.write(self.target_sheet)
 
     def _shift_coordinates(self, coord, offset):
