@@ -6,6 +6,8 @@ from openpyxl.drawing.image import Image
 from excel_utils import coordinate_string_to_index,get_merged_cell_size,is_cell_in_block,subtract_coordinates,add_coordinates
 from sheet_image_loader import SheetImageLoader
 
+_CAHR_WIDTH_PIXELS = 7.1
+
 class XlsxBlockImageWriter:
     def __init__(self,template_sheet,source_block_position,target_block_start_coord,temp_dir):
         self.template_sheet = template_sheet
@@ -18,7 +20,7 @@ class XlsxBlockImageWriter:
         self.temp_image_paths = []
 
     def write(self,target_sheet):
-        # step1: get image source coords from template sheet block.
+        # get image source coords from template sheet block.
         image_source_coords = self._get_image_source_coords()
         for image_source_coord in image_source_coords:
             image_coord_offset = self._get_image_coord_offset(image_source_coord)
@@ -76,9 +78,8 @@ class XlsxBlockImageWriter:
 
     @staticmethod
     def _characters_to_pixels(character_width, font_size):
-        character_width_pixels = 9.3
         # Convert character width to pixels
-        pixels = character_width * character_width_pixels
+        pixels = character_width * _CAHR_WIDTH_PIXELS
         return pixels
 
     def _resize_image(self, image, desired_width=-1, desired_height=-1):
