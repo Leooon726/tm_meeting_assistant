@@ -39,14 +39,32 @@ class XlsxTemplateReader():
 
     @staticmethod
     def _extract_field(input_string):
+        '''
+        input_string: like "会议主题：{主题%父亲节}" or "会议主题：{主题}"
+        return: 主题
+        '''
         start = input_string.find('{')
-        end = input_string.find('}')
+        end = input_string.find('%') if '%' in input_string else input_string.find('}')
 
         if start != -1 and end != -1 and start < end:
-            extracted_text = input_string[start:end + 1]
+            # Do not containt the '{' and '}'.
+            extracted_text = input_string[start+1:end]
             return extracted_text
         else:
             return None
+
+    def get_user_filled_fields_from_sheet(self):
+        field_list = []
+        for block_name in self.template_block_position_dict.keys():
+            if block_name in ['parent_block','notice_block','child_block']:
+                continue
+            field_list+=self.get_field_list(block_name)
+        # for row in self.template_sheet.iter_rows():
+        #     for cell in row:
+        #         if cell.value is not None and isinstance(
+        #                 cell.value, str) and '{' in cell.value:
+        #             field_list.append(self._extract_field(cell.value))
+        return field_list
 
     def get_field_list(self, template_block_name):
         position = self.template_block_position_dict[template_block_name]
@@ -111,15 +129,16 @@ class XlsxTemplateReader():
                 return row_dict['start_coord'].split(',')
 
 if __name__ == '__main__':
-    # template_file = '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/jabil_jouse_template_for_print.xlsx'
-    # template_sheet_name = 'template'
-    # template_position_sheet_name = 'template_position'
-    template_file = '/home/lighthouse/agenda_template_zoo/huangpu_rise_template_for_print/huangpu_rise_template_for_print.xlsx'
-    template_sheet_name = 'page1'
-    template_position_sheet_name = 'page1_block_position'
+    template_file = '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/jabil_jouse_template_for_print.xlsx'
+    template_sheet_name = 'template'
+    template_position_sheet_name = 'template_position'
+    # template_file = '/home/lighthouse/agenda_template_zoo/huangpu_rise_template_for_print/huangpu_rise_template_for_print.xlsx'
+    # template_sheet_name = 'page1'
+    # template_position_sheet_name = 'page1_block_position'
 
     tr = XlsxTemplateReader(template_file, template_sheet_name,
                             template_position_sheet_name)
+    print(tr.get_user_filled_fields_from_sheet())
     print(tr.template_block_size_dict)
 
     field_list = tr.get_field_list('contact_block')

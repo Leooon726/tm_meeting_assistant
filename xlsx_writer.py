@@ -219,6 +219,45 @@ class XlsxWriter():
                 col_shift_offset)].width = src_file_sheet.column_dimensions[
                     get_column_letter(i)].width
 
+    @staticmethod
+    def _is_field_to_be_filled(cell_string,candidate_key):
+        '''
+        cell_string: like "主题：{主题%父亲节}" or "主题：{主题}"
+        if |candidate_key| is like "主题", then returns True.
+        otherwise returns False.
+        '''
+        if '{' not in cell_string or '}' not in cell_string:
+            return False
+        # Extract the field name from the cell string
+        field_name_start = cell_string.find('{') + 1
+        field_name_end = cell_string.find('%') if '%' in cell_string else cell_string.find('}')
+        field_name = cell_string[field_name_start:field_name_end]
+
+        # Compare the extracted field name with the candidate key
+        if field_name == candidate_key:
+            return True
+        else:
+            return False
+
+    @staticmethod
+    def _fill_field(cell_string,candidate_value):
+        '''
+        cell_string: like "主题：{主题%父亲节}" or "主题：{主题}"
+        candidate_value: like "旅行"
+        return: "主题：旅行"
+        String within {} is replaced.
+        '''
+        candidate_value = str(candidate_value)
+
+        if '{' not in cell_string or '}' not in cell_string:
+            return cell_string
+
+        start = cell_string.find('{')
+        end = cell_string.find('}')
+        string_to_be_replaced = cell_string[start:end+1]
+
+        return cell_string.replace(string_to_be_replaced, candidate_value)
+
     def _modify_sheet(self, sheet, data):
         max_row = sheet.max_row
         max_column = sheet.max_column
@@ -228,8 +267,9 @@ class XlsxWriter():
                 for col_num in range(1, max_column + 1):
                     cell = sheet.cell(row=row_num, column=col_num)
                     cell_value = cell.value
-                    if cell_value is not None and isinstance(cell_value,str) and key in cell_value:
-                        cell.value = cell.value.replace(key, str(value))
+                    if cell_value is not None and isinstance(cell_value,str) and self._is_field_to_be_filled(cell_value,key):
+                        cell.value = self._fill_field(cell_value,value)
+                        # cell.value = cell.value.replace(key, str(value))
         return sheet
 
     def merge_cells(self, start_coord, end_coord):

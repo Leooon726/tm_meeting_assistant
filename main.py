@@ -98,9 +98,9 @@ class ExcelAgendaSheetEngine():
     
         res_dict = {}
         for field_name in field_list:
-            assert field_name.startswith('{') and field_name.endswith('}')
-            field_key = field_name[1:-1]
-            res_dict[field_name] = _find_data_for_field_key(field_key)
+            # assert field_name.startswith('{') and field_name.endswith('}')
+            # field_key = field_name[1:-1]
+            res_dict[field_name] = _find_data_for_field_key(field_name)
         return res_dict
 
     def _write_fixed_block(self,block_name):

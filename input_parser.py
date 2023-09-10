@@ -5,13 +5,13 @@ from datetime import datetime, timedelta
 class NoticeEvent():
 
     def __init__(self, notice):
-        self.notice_event = {'{time}': None, '{notice}': notice}
+        self.notice_event = {'time': None, 'notice': notice}
 
     def calculate_time(self, start_time):
-        self.notice_event['{time}'] = start_time
+        self.notice_event['time'] = start_time
 
     def get_end_time(self):
-        return self.notice_event['{time}']
+        return self.notice_event['time']
 
     def get_event(self):
         return self.notice_event
@@ -21,19 +21,19 @@ class ParentEvent():
 
     def __init__(self, parent_event_name):
         '''
-        parent: {'{start_time}':'12:01','{event_name}':'开场','{duration}':'8'}
-        child: {'{event_name}':'开场白','{end_time}':'15:01','{duration}':'8','{host_name}':'林长宏'}
+        parent: {'start_time':'12:01','event_name':'开场','duration':'8'}
+        child: {'event_name':'开场白','end_time':'15:01','duration':'8','host_name':'林长宏'}
         only event_start_time is given, other time and duration are derived.
         '''
         self.parent_event = {
-            '{start_time}': None,
-            '{event_name}': parent_event_name,
-            '{duration}': None
+            'start_time': None,
+            'event_name': parent_event_name,
+            'duration': None
         }
         self.child_events = []
 
     def set_parent_event_duration(self, duration):
-        self.parent_event['{duration}'] = int(duration)
+        self.parent_event['duration'] = int(duration)
 
     def add_child_event(self, child_event_name, duration, host_name):
         '''
@@ -41,10 +41,10 @@ class ParentEvent():
         '''
         self.calculated = False
         data = {
-            '{event_name}': child_event_name,
-            '{end_time}': None,
-            '{duration}': int(duration),
-            '{host_name}': host_name
+            'event_name': child_event_name,
+            'end_time': None,
+            'duration': int(duration),
+            'host_name': host_name
         }
         self.child_events.append(data)
 
@@ -63,20 +63,20 @@ class ParentEvent():
         Calcuates the parent duration, and all the child event end time.
         '''
         start_time = self._convert_time_string_to_datetime(start_time_str)
-        self.parent_event['{start_time}'] = start_time
+        self.parent_event['start_time'] = start_time
         cur_time = start_time
         for child_event in self.child_events:
-            child_event['{end_time}'] = cur_time + timedelta(
-                minutes=child_event['{duration}'])
-            cur_time = child_event['{end_time}']
+            child_event['end_time'] = cur_time + timedelta(
+                minutes=child_event['duration'])
+            cur_time = child_event['end_time']
 
         # If parent event duration already set, no need to derive it.
-        if self.parent_event['{duration}'] is not None:
+        if self.parent_event['duration'] is not None:
             return
         duration_sum = 0
         for child_event in self.child_events:
-            duration_sum += child_event['{duration}']
-        self.parent_event['{duration}'] = duration_sum
+            duration_sum += child_event['duration']
+        self.parent_event['duration'] = duration_sum
 
     def _convert_datetime_values_to_string(self, input_dict):
         converted_dict = {}
@@ -97,8 +97,8 @@ class ParentEvent():
         ]
 
     def get_end_time(self):
-        end_time = self.parent_event['{start_time}'] + timedelta(
-            minutes=self.parent_event['{duration}'])
+        end_time = self.parent_event['start_time'] + timedelta(
+            minutes=self.parent_event['duration'])
         end_time_str = end_time.strftime("%H:%M")
         return end_time_str
 
@@ -193,7 +193,7 @@ class MeetingParser:
         '''
         Removes the first line and keep the following content.
         '''
-        self.project_info = dict(project_info=content.split('\n', 1)[1])
+        self.project_info = {'备稿演讲项目简介':content.split('\n', 1)[1]}
 
     def parse_file(self, filename):
         with open(filename, 'r', encoding='utf-8') as file:
