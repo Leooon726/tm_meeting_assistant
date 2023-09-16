@@ -1,0 +1,250 @@
+{
+    "meeting_info": [
+        {
+            "field_name": "会议标题",
+            "content": "第319次线下会议-中文会议"
+        },
+        {
+            "field_name": "主题",
+            "content": "教师节"
+        },
+        {
+            "field_name": "日期",
+            "content": "2023年1月2号"
+        },
+        {
+            "field_name": "备稿演讲项目简介",
+            "content": "L2P3 导师的作用：将第一次演讲的反馈运用到第二次演讲当中。\\n LD L1P2 评估与反馈的第一次，项目内容是达标一篇任意主题的演讲，接受反馈，并将反馈用于第二个演讲。"
+        },
+        {
+            "field_name": "开始时间",
+            "content": "15:00"
+        },
+        {
+            "field_name": "线上会议号",
+            "content": "-"
+        }
+    ],
+    "schedule_events": [
+        {
+        "is_parent": true,
+        "event_name": "会议开场"
+        },
+        {
+        "event_name": "主持人开场白(介绍会议主要内容、及可能的议程改动)",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "介绍会议规则以及宾客介绍（限时每位30秒）",
+        "duration": "2",
+        "role": "礼宾师"
+        },
+        {
+            "event_name": "介绍国际演讲会及捷普聚思国际演讲俱乐部",
+            "duration": "5",
+            "role": "主席"
+        },
+        {
+            "is_parent": true,
+            "event_name": "会议支持者介绍"
+        },
+        {
+        "event_name": "主持人介绍及中场串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "时间官",
+        "duration": "1",
+        "role": "时间官"
+        },
+        {
+        "event_name": "哼哈师",
+        "duration": "1",
+        "role": "哼哈师"
+        },
+        {
+        "event_name": "语法师&词汇大师（今日之词：）",
+        "duration": "2",
+        "role": "语法师"
+        },
+        {
+        "event_name": "总体点评师",
+        "duration": "1",
+        "role": "总体点评师"
+        },
+        {
+        "event_name": "破冰师",
+        "duration": "6",
+        "role": "破冰师"
+        },
+        {
+            "is_parent": true,
+            "event_name": "即兴演讲"
+        },
+        {
+        "event_name": "主持人串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "即兴主持人",
+        "duration": "2",
+        "role": "即兴主持人"
+        },
+        {
+        "event_name": "即兴演讲《诗和远方》（演讲每人2分钟，邀请串场1分钟）",
+        "duration": "18",
+        "role": "会员&宾客"
+        },
+        {
+        "event_name": "主持人串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "即兴点评报告",
+        "duration": "7",
+        "role": "即兴点评师"
+        },
+        {
+            "is_parent": true,
+            "event_name": "小歇及合影",
+            "duration": "5"
+        },
+        {
+            "is_parent": true,
+            "event_name": "备稿演讲及点评"
+        },
+        {
+        "event_name": "主持人串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "点评师介绍项目级别和要求",
+        "duration": "1",
+        "role": "备稿点评师1"
+        },
+        {
+        "event_name": "备稿演讲1《人工智能，我们该何去何从》",
+        "duration": "7",
+        "role": "备稿演讲者1"
+        },
+        {
+        "event_name": "点评师介绍项目级别和要求",
+        "duration": "1",
+        "role": "备稿点评师2"
+        },
+        {
+        "event_name": "备稿演讲2《蜕变》MS5-1",
+        "duration": "12",
+        "role": "备稿演讲者2"
+        },
+        {
+        "event_name": "主持人串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "备稿点评1",
+        "duration": "3",
+        "role": "备稿点评师1"
+        },
+        {
+        "event_name": "主持人串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "备稿点评2",
+        "duration": "3",
+        "role": "备稿点评师2"
+        },
+        {
+            "is_parent": true,
+            "event_name": "新会员入会仪式"
+        },
+        {
+        "event_name": "新会员入会仪式",
+        "duration": "10",
+        "role": "主席"
+        },
+        {
+            "is_parent": true,
+            "event_name": "会议支持者报告"
+        },
+        {
+        "event_name": "主持人开场及中场串词",
+        "duration": "1",
+        "role": "主持人"
+        },
+        {
+        "event_name": "时间官报告",
+        "duration": "2",
+        "role": "时间官"
+        },
+        {
+        "event_name": "哼哈师报告",
+        "duration": "2",
+        "role": "哼哈师"
+        },
+        {
+        "event_name": "语法师报告",
+        "duration": "3",
+        "role": "语法师"
+        },
+        {
+        "event_name": "总体点评师报告",
+        "duration": "7",
+        "role": "总体点评师"
+        },
+        {
+            "is_parent": true,
+            "event_name": "主持人提示观众投票选出“最佳备稿演讲”等，微信小程序投票"
+        },
+        {
+            "is_parent": true,
+            "event_name": "会议尾声"
+        },
+        {
+        "event_name": "嘉宾回访环节",
+        "duration": "2",
+        "role": "主席"
+        },
+        {
+        "event_name": "颁奖",
+        "duration": "2",
+        "role": "主席"
+        },
+        {
+        "event_name": "会议招募",
+        "duration": "1",
+        "role": "下一期会议经理"
+        },
+        {
+            "is_parent": true,
+            "event_name": "会议结束"
+        }
+        ],
+        "role_name_list": [
+            {"role":"会议经理","name":"陆岚洁"},
+            {"role":"礼宾师","name": "陆岚洁"},
+            {"role":"主持人","name": "刘惠芳"},
+            {"role":"时间官","name": "神秘人物"},
+            {"role":"哼哈师","name": "娜娜（宾客）"},
+            {"role":"语法师","name": "丘愉庄"},
+            {"role":"总体点评师","name": "舒朗（睿思演讲俱乐部）"},
+            {"role":"破冰师","name": "海龙（宾客）"},
+            {"role":"即兴主持人","name": "杨然"},
+            {"role":"即兴点评师","name": "赵丹敏"},
+            {"role":"备稿演讲者1","name": "陆岚洁"},
+            {"role":"备稿演讲者2","name": "范琴"},
+            {"role":"备稿点评师1","name": "李静"},
+            {"role":"备稿点评师2","name": "张合堂"},
+            {"role":"下一期会议经理","name": "-"},
+            {"role":"摄影师","name": "陆岚洁"},
+            {"role":"主席","name": "杨然"}
+        ]
+}

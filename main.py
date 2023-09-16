@@ -4,12 +4,15 @@ python3 main.py -i /home/lighthouse/tm_meeting_assistant/user_input.txt -o /home
 '''
 import argparse,os
 
-from input_parser import MeetingParser, ParentEvent, NoticeEvent
+from input_parser import InputTxtParser#, ParentEvent, NoticeEvent
+from json_input_parser import InputJsonParser, ParentEvent, NoticeEvent
 from config_reader import ConfigReader
 from block_position_calculator import PositionCalculator
 import xlsx_writer as xw
 from template_reader import XlsxTemplateReader
 from excel_utils import add_coordinates
+from print_setting_writer import set_print_setting
+from excel_border_writer import set_outer_borders
 
 
 def _get_all_block_names(block_position_config_path):
@@ -36,8 +39,8 @@ class ExcelAgendaEngine():
 
     def write(self):
         for target_sheet_config_dict in self.config['target_sheets']:
-            sheet_dict = target_sheet_config_dict
-            sheet_dict['template_excel'] = self.config['template_excel']
+            # sheet_dict = target_sheet_config_dict
+            target_sheet_config_dict['template_excel'] = self.config['template_excel']
             sheet_engine = ExcelAgendaSheetEngine(self.user_input_txt_file_path,self.target_file_path,target_sheet_config_dict)
             sheet_engine.write()
 
@@ -46,16 +49,17 @@ class ExcelAgendaSheetEngine():
     '''
     This class is used to create a excel sheet of agenda.
     '''
-    def __init__(self,user_input_txt_file_path,target_file_path,config):
+    def __init__(self,user_input_file_path,target_file_path,config):
         block_position_config_path = config['block_position_config']
         template_file = config['template_excel']
         template_sheet_name = config['template_sheet_name']
         template_position_sheet_name = config['template_position_sheet_name']
-        target_sheet_name = config['target_sheet_name']
+        self.target_sheet_name = config['target_sheet_name']
+        self.target_file_path = target_file_path
 
         # Parse all the user input.
-        self.user_input_parser = MeetingParser()
-        self.user_input_parser.parse_file(user_input_txt_file_path)
+        self.user_input_parser = InputTxtParser() if user_input_file_path.endswith('txt') else InputJsonParser()
+        self.user_input_parser.parse_file(user_input_file_path)
         self.event_list = self.user_input_parser.event_list
         role_dict = self.user_input_parser.role_dict
         meeting_info_dict = self.user_input_parser.meeting_info_dict
@@ -83,8 +87,8 @@ class ExcelAgendaSheetEngine():
 
         # Create excel writer.
         self.xlsx_writer = xw.XlsxWriter(template_file, template_sheet_name,
-                                self.template_position_config, target_file_path,
-                                target_sheet_name)
+                                self.template_position_config, self.target_file_path,
+                                self.target_sheet_name)
         
         self.block_names_to_be_written = _get_all_block_names(block_position_config_path)
 
@@ -162,11 +166,13 @@ class ExcelAgendaSheetEngine():
             else:
                 self._write_variable_block(block_name)
         self.xlsx_writer.save()
+        set_outer_borders(self.target_file_path,self.target_sheet_name,self.target_file_path)
+        set_print_setting(self.target_file_path,self.target_sheet_name)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Process configuration path for Excel Agenda Engine')
-    parser.add_argument('-i','--input', dest='user_input_txt', type=str, required=True,
+    parser = argparse.ArgumentParser(description='Generate Agenda.')
+    parser.add_argument('-i','--input', dest='user_input_file_path', type=str, required=True,
                         help='Path to the input txt file')
     parser.add_argument('-o','--output', dest='output_excel', type=str, required=True,
                         help='Path to the output excel file')
@@ -174,5 +180,5 @@ if __name__ == '__main__':
                         help='Path to the configuration file')
     args = parser.parse_args()
 
-    engine = ExcelAgendaEngine(args.user_input_txt,args.output_excel,args.config_path)
+    engine = ExcelAgendaEngine(args.user_input_file_path,args.output_excel,args.config_path)
     engine.write()

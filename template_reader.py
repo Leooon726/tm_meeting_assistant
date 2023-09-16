@@ -41,32 +41,51 @@ class XlsxTemplateReader():
     def _extract_field(input_string):
         '''
         input_string: like "会议主题：{主题%父亲节}" or "会议主题：{主题}"
-        return: 主题
+        return: "主题"
         '''
         start = input_string.find('{')
         end = input_string.find('%') if '%' in input_string else input_string.find('}')
 
         if start != -1 and end != -1 and start < end:
-            # Do not containt the '{' and '}'.
+            # Do not containt the '{', '}' and '%'.
             extracted_text = input_string[start+1:end]
             return extracted_text
         else:
             return None
 
+    @staticmethod
+    def _extract_field_with_example(input_string):
+        '''
+        Example 1:
+            input_string: "会议主题：{主题}"
+            return: {'field_name':"主题"}
+        Example 2:
+            input_string: "会议主题：{主题%父亲节}"
+            return: {'field_name':"主题", 'example':"父亲节"}
+        '''
+        field_name = XlsxTemplateReader._extract_field(input_string)
+        if field_name is None:
+            return None
+
+        res = {'field_name':field_name}
+        if '%' not in input_string:
+            return res
+        start = input_string.find('%')
+        end = input_string.find('}')
+        example = input_string[start+1:end]
+        res['example'] = example
+        return res
+
     def get_user_filled_fields_from_sheet(self):
         field_list = []
         for block_name in self.template_block_position_dict.keys():
+            # the following blocks should be automatically filled by program, not by users.
             if block_name in ['parent_block','notice_block','child_block']:
                 continue
-            field_list+=self.get_field_list(block_name)
-        # for row in self.template_sheet.iter_rows():
-        #     for cell in row:
-        #         if cell.value is not None and isinstance(
-        #                 cell.value, str) and '{' in cell.value:
-        #             field_list.append(self._extract_field(cell.value))
+            field_list+=self.get_field_list(block_name,extract_method=XlsxTemplateReader._extract_field_with_example)
         return field_list
 
-    def get_field_list(self, template_block_name):
+    def get_field_list(self, template_block_name,extract_method=None):
         position = self.template_block_position_dict[template_block_name]
         if position is None:
             start_coord = get_left_top_coordinate(self.template_sheet)
@@ -78,12 +97,14 @@ class XlsxTemplateReader():
         start_col, start_row = coordinate_string_to_index(start_coord)
         end_col, end_row = coordinate_string_to_index(end_coord)
         field_list = []
+        if extract_method is None:
+            extract_method = XlsxTemplateReader._extract_field
         for row_num in range(start_row, end_row + 1):
             for col_num in range(start_col, end_col + 1):
                 cell = self.template_sheet.cell(row=row_num, column=col_num)
                 if cell.value is not None and isinstance(
                         cell.value, str) and '{' in cell.value:
-                    field_list.append(self._extract_field(cell.value))
+                    field_list.append(extract_method(cell.value))
         return field_list
 
     def _read_sheet_as_dict_list(self):
