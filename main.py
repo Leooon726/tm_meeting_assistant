@@ -4,8 +4,10 @@ python3 main.py -i /home/lighthouse/tm_meeting_assistant/user_input.txt -o /home
 '''
 import argparse,os
 
-from input_parser import InputTxtParser#, ParentEvent, NoticeEvent
-from json_input_parser import InputJsonParser, ParentEvent, NoticeEvent
+from input_parser import InputTxtParser
+from json_input_parser import InputJsonParser
+from text_blocks_json_input_parser import TextBlocksJsonInputParser
+from agenda_event import ParentEvent, NoticeEvent
 from config_reader import ConfigReader
 from block_position_calculator import PositionCalculator
 import xlsx_writer as xw
@@ -58,7 +60,7 @@ class ExcelAgendaSheetEngine():
         self.target_file_path = target_file_path
 
         # Parse all the user input.
-        self.user_input_parser = InputTxtParser() if user_input_file_path.endswith('txt') else InputJsonParser()
+        self.user_input_parser = self._select_input_parser(user_input_file_path)
         self.user_input_parser.parse_file(user_input_file_path)
         self.event_list = self.user_input_parser.event_list
         role_dict = self.user_input_parser.role_dict
@@ -91,6 +93,15 @@ class ExcelAgendaSheetEngine():
                                 self.target_sheet_name)
         
         self.block_names_to_be_written = _get_all_block_names(block_position_config_path)
+
+    @staticmethod
+    def _select_input_parser(user_input_file_path):
+        if user_input_file_path.endswith('txt'):
+          return InputTxtParser()
+        elif user_input_file_path.endswith('text_blocks.json'):
+          return TextBlocksJsonInputParser()
+        elif user_input_file_path.endswith('json'):
+          return InputJsonParser()
 
     @staticmethod
     def _find_data_for_template_fields(field_list, data_dict_list):
