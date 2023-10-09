@@ -107,6 +107,8 @@ class InputTxtParser:
         '''
         Removes the first line and keep the following content.
         '''
+        if content is None:
+            return
         self.project_info = {'备稿演讲项目简介':content.split('\n', 1)[1]}
 
     def parse_file(self, filename):
@@ -115,6 +117,7 @@ class InputTxtParser:
 
         sections = content.split('\n\n')
 
+        role_section,meeting_info_section,agenda_section,project_section = None,None,None,None
         for section in sections:
             if '【角色表】' in section:
                 role_section = section

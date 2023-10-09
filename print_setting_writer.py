@@ -4,6 +4,9 @@ from openpyxl.worksheet.page import PrintPageSetup
 from openpyxl.worksheet.page import PageMargins
 from openpyxl.styles import Font
 
+def _cm_to_inch(cm_value):
+    return cm_value / 2.54
+
 def set_print_setting(excel_file_path='/home/lighthouse/output_files/adhoc/jabil_test.xlsx',sheet_name='Sheet',print_range=None):
     # Load the workbook
     workbook = load_workbook(excel_file_path)
@@ -22,10 +25,10 @@ def set_print_setting(excel_file_path='/home/lighthouse/output_files/adhoc/jabil
     worksheet.print_options.verticalCentered = True
 
     margins = PageMargins(
-        left=0.1,   # Adjust the left margin value (in inches)
-        right=0.1,  # Adjust the right margin value (in inches)
-        top=0.1,    # Adjust the top margin value (in inches)
-        bottom=0.1  # Adjust the bottom margin value (in inches)
+        left=_cm_to_inch(0.64),
+        right=_cm_to_inch(0.64),
+        top=_cm_to_inch(0.91),
+        bottom=_cm_to_inch(0.91)
     )
 
     # Assign the margins to the worksheet
@@ -40,4 +43,5 @@ def set_print_setting(excel_file_path='/home/lighthouse/output_files/adhoc/jabil
 
 
 if __name__ == '__main__':
-    set_print_setting()
+    set_print_setting('/home/lighthouse/output_files/adhoc/rise_test.xlsx','第一页','/home/lighthouse/output_files/adhoc/rise_print_test.xlsx')
+    set_print_setting('/home/lighthouse/output_files/adhoc/rise_test.xlsx','第二页','/home/lighthouse/output_files/adhoc/rise_print_test.xlsx')

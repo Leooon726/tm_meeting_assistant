@@ -22,7 +22,7 @@ class ParentEvent():
     def __init__(self, parent_event_name):
         '''
         parent: {'start_time':'12:01','event_name':'开场','duration':'8'}
-        child: {'event_name':'开场白','end_time':'15:01','duration':'8','host_name':'林长宏'}
+        child: {'start_time':'12:01','event_name':'开场白','end_time':'15:01','duration':'8','host_name':'林长宏'}
         only event_start_time is given, other time and duration are derived.
         '''
         self.parent_event = {
@@ -66,6 +66,7 @@ class ParentEvent():
         self.parent_event['start_time'] = start_time
         cur_time = start_time
         for child_event in self.child_events:
+            child_event['start_time'] = cur_time
             child_event['end_time'] = cur_time + timedelta(
                 minutes=child_event['duration'])
             cur_time = child_event['end_time']

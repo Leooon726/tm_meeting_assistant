@@ -78,7 +78,11 @@ def get_merged_cell_size(worksheet, cell_coordinate):
             total_width = 0
             # Calculate total height
             for row in range(start_row, end_row + 1):
-                total_height += worksheet.row_dimensions[row].height
+                cur_height = worksheet.row_dimensions[row].height
+                # cell_height is None if the cell is not adjusted and remain the default value. We set it as 13.8 points. 
+                if cur_height is None:
+                    cur_height = 13.8
+                total_height += cur_height
             # Calculate total width
             for col in range(start_col, end_col + 1):
                 column_letter = get_column_letter(col)
@@ -86,6 +90,9 @@ def get_merged_cell_size(worksheet, cell_coordinate):
             return total_width,total_height
     cell = worksheet[cell_coordinate]
     cell_height = worksheet.row_dimensions[cell.row].height
+    # cell_height is None if the cell is not adjusted and remain the default value. We set it as 13.8 points. 
+    if cell_height is None:
+        cell_height = 13.8
     cell_width = worksheet.column_dimensions[cell.column_letter].width
     return cell_width,cell_height
 
@@ -94,6 +101,6 @@ if __name__ == '__main__':
     # assert calculate_block_size('A1','B1') == (2,1)
 
     import openpyxl
-    workbook = openpyxl.load_workbook("/home/lighthouse/agenda_template_zoo/huangpu_rise_template_for_print/huangpu_rise_template_for_print.xlsx")
-    sheet = workbook['page1']
-    print(get_merged_cell_size(sheet,'A4'))
+    workbook = openpyxl.load_workbook("/home/lighthouse/agenda_template_zoo/general_template/general_template.xlsx")
+    sheet = workbook['template']
+    print(get_merged_cell_size(sheet,'A1'))
