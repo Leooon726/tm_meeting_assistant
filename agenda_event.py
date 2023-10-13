@@ -33,7 +33,7 @@ class ParentEvent():
         self.child_events = []
 
     def set_parent_event_duration(self, duration):
-        self.parent_event['duration'] = int(duration)
+        self.parent_event['duration'] = float(duration)
 
     def add_child_event(self, child_event_name, duration, host_name):
         '''
@@ -43,7 +43,7 @@ class ParentEvent():
         data = {
             'event_name': child_event_name,
             'end_time': None,
-            'duration': int(duration),
+            'duration': float(duration),
             'host_name': host_name
         }
         self.child_events.append(data)
@@ -80,13 +80,27 @@ class ParentEvent():
         self.parent_event['duration'] = duration_sum
 
     @staticmethod
+    def format_float(value):
+        """
+        if value is 1.5, print 1.5,
+        if value is 1.0, print 1.
+        """
+        if value % 1 == 0:
+            return str(int(value))
+        else:
+            return str(value)
+
+    @staticmethod
     def _convert_datetime_values_to_string(input_dict):
         converted_dict = {}
         for key, value in input_dict.items():
             if isinstance(value, datetime):
                 converted_dict[key] = value.strftime("%H:%M")
-            else:
-                converted_dict[key] = value
+                continue
+            if key == 'duration':
+                converted_dict[key] = ParentEvent.format_float(value)
+                continue
+            converted_dict[key] = value
         return converted_dict
 
     def get_parent_event(self):

@@ -61,7 +61,7 @@ class InputTxtParser:
             parts = line.split()
             role = parts[2]
             person_name = self._get_person_name_from_role(role)
-            parent_event.add_child_event(parts[0], int(parts[1]), person_name)
+            parent_event.add_child_event(parts[0], parts[1], person_name)
 
         return parent_event
 

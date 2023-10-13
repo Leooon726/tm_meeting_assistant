@@ -17,6 +17,7 @@ python3 get_template_fields_main.py -c /home/lighthouse/tm_meeting_assistant/exa
 {duration}
 
 2. The fields of and child event block should be:
+{start_time}
 {event_name}
 {duration}
 {end_time}
