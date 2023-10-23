@@ -1,0 +1,31 @@
+coordinates:
+  - object: title_block
+    position: A1
+
+freedoms:
+  - relationship: min_height
+    objects:
+     - project_block
+
+constraints:
+  - relationship: left_aligned_bottom_adjacent
+    objects:
+      - title_block
+      - theme_block
+      - schedule_block
+    priority: 0
+      
+  - relationship: right_aligned_bottom_adjacent
+    objects:
+      - title_block
+      - rule_block
+      - contact_block
+      - project_block
+      - information_block
+    priority: 0
+
+  - relationship: bottom_aligned_left_adjacent
+    objects:
+      - schedule_block
+      - information_block
+    priority: 1

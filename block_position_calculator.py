@@ -43,6 +43,7 @@ class PositionCalculator:
     def get_start_coords(self):
         self._check_if_all_block_size_exist()
         self._calcuate_start_coords()
+        # Transform col-row indices into cell coordinate, like (1,2) -> A2.
         start_coord_dict = {}
         for block_name, start_coord_idx in self.start_coord_idx_dict.items():
             start_coord_dict[block_name] = index_to_coordinate_string(

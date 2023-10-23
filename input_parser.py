@@ -59,6 +59,7 @@ class InputTxtParser:
         # Parse child events.
         for line in lines:
             parts = line.split()
+            assert len(parts)==3,f"Error, too less columns, length={len(parts)}: {parts}"
             role = parts[2]
             person_name = self._get_person_name_from_role(role)
             parent_event.add_child_event(parts[0], parts[1], person_name)

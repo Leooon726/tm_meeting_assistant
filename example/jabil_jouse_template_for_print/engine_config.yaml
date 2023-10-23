@@ -4,4 +4,4 @@ target_sheets:
   - target_sheet_name: 'Sheet'
     template_sheet_name: 'template'
     template_position_sheet_name: 'template_position'
-    block_position_config: '/home/lighthouse/agenda_template_zoo/jabil_jouse_template_for_print/block_position_config.yaml'
+    block_position_config: '/home/lighthouse/tm_meeting_assistant/example/jabil_jouse_template_for_print/block_position_csp_config.yaml'
