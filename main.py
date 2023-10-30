@@ -10,6 +10,7 @@ from text_blocks_json_input_parser import TextBlocksJsonInputParser
 from agenda_event import ParentEvent, NoticeEvent
 from config_reader import ConfigReader
 from block_position_csp_solver import BlockPositionCSPSolverAdaptor
+from block_position_calculator import PositionCalculator
 import xlsx_writer as xw
 from template_reader import XlsxTemplateReader
 from excel_utils import add_coordinates
@@ -78,7 +79,7 @@ class ExcelAgendaSheetEngine():
         template_block_size_dict = self.template_reader.get_template_block_sizes()
 
         # Calculate the block start coord.
-        block_position_calculator = BlockPositionCSPSolverAdaptor(block_position_config_path)
+        block_position_calculator = self._select_block_calculator(block_position_config_path)
         # Most of the block size to be written have the same size as template blocks, so we can get the block sizes by template_block_size_dict
         block_position_calculator.set_block_size_base_on_template_block(template_block_size_dict)
         block_position_calculator.set_schedule_block_height(self.user_input_parser.get_total_event_num())
@@ -90,6 +91,13 @@ class ExcelAgendaSheetEngine():
                                 self.target_sheet_name)
         
         self.block_names_to_be_written = _get_all_block_names_by_block_start_coord_dict(self.block_start_coord_dict)
+
+    @staticmethod
+    def _select_block_calculator(file_path):
+        if file_path.endswith('csp_config.yaml'):
+            return BlockPositionCSPSolverAdaptor(file_path)
+        else:
+            return PositionCalculator(file_path)
 
     @staticmethod
     def _select_input_parser(user_input_file_path):
