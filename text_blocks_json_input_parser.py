@@ -17,15 +17,24 @@ class TextBlocksJsonInputParser(InputTxtParser):
         self._parse_meeting_info(data_dict['meeting_info'])
         self._parse_agenda(data_dict['agenda_content'])
 
+    def _parse_meeting_info(self,meeting_info):
+        '''
+        meeting_info: a list of dict, every dict contains keys: field_name, content
+        '''
+        for meeting_info_item in meeting_info:
+            name = meeting_info_item['field_name']
+            info = meeting_info_item['content']
+            self.meeting_info_dict[name] = info
+
 if __name__ == '__main__':
     # tests.
     parser = TextBlocksJsonInputParser()
-    parser.parse_file("/home/lighthouse/tm_meeting_assistant/example/output_files/user_input_text_blocks.json")
+    parser.parse_file("/home/lighthouse/output_files/20231104140155_8e4/user_input_text_blocks.json")
+    # parser.parse_file("/home/lighthouse/tm_meeting_assistant/example/output_files/user_input_text_blocks.json")
 
     role_dict = parser.role_dict
     event_list = parser.event_list
     meeting_info_dict = parser.meeting_info_dict
-    # print(meeting_info_dict)
     # print(parser.get_total_event_num())
 
     # print("Role Dictionary:")

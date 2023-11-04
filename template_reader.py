@@ -68,12 +68,12 @@ class XlsxTemplateReader():
             return None
 
         res = {'field_name':field_name}
-        if '%' not in input_string:
-            return res
-        start = input_string.find('%')
-        end = input_string.find('}')
-        example = input_string[start+1:end]
-        res['example'] = example
+        if '%' in input_string:
+            start = input_string.find('%')
+            end = input_string.find('}')
+            example = input_string[start+1:end]
+            res['example'] = example
+        res['is_single_line'] = ('\n' not in input_string)
         return res
 
     def get_user_filled_fields_from_sheet(self):
