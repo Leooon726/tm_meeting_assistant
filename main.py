@@ -110,6 +110,9 @@ class ExcelAgendaSheetEngine():
 
     @staticmethod
     def _find_data_for_template_fields(field_list, data_dict_list):
+        '''
+        field_list: [{'field_name': '会议标题'}, {'field_name': '会议经理'}]
+        '''
         def _find_data_for_field_key(field_key):
             for data_dict in data_dict_list:
                 if field_key in data_dict:
@@ -117,9 +120,10 @@ class ExcelAgendaSheetEngine():
             raise AttributeError('Cannot find data for the field to be filled {}.'.format(field_key))
     
         res_dict = {}
-        for field_name in field_list:
+        for field_dict in field_list:
             # assert field_name.startswith('{') and field_name.endswith('}')
             # field_key = field_name[1:-1]
+            field_name = field_dict['field_name']
             res_dict[field_name] = _find_data_for_field_key(field_name)
         return res_dict
 
