@@ -26,16 +26,38 @@ class TextBlocksJsonInputParser(InputTxtParser):
             info = meeting_info_item['content']
             self.meeting_info_dict[name] = info
 
+    def _parse_agenda(self,parent_event_dict_list):
+        def _is_notice_block(parent_event_dict):
+            return 'child_events' not in parent_event_dict or len(parent_event_dict['child_events'])==0
+
+        def _create_parent_event(parent_event_dict):
+            parent_event = ParentEvent(parent_event_dict['event_name'])
+            if 'duration' in parent_event_dict:
+                parent_event.set_parent_event_duration(
+                    parent_event_dict['duration'])
+            for child_event in parent_event_dict['child_events']:
+                child_event_name = child_event['event_name']
+                child_event_duration = child_event['duration']
+                person_name = self._get_person_name_from_role(child_event['role'])
+                parent_event.add_child_event(child_event_name, child_event_duration, person_name)
+            return parent_event
+
+        for parent_event_dict in parent_event_dict_list:
+            if _is_notice_block(parent_event_dict):
+                event = NoticeEvent(parent_event_dict['event_name'])
+            else:
+                event = _create_parent_event(parent_event_dict)
+            self.event_list.append(event)
+        
 if __name__ == '__main__':
     # tests.
     parser = TextBlocksJsonInputParser()
-    parser.parse_file("/home/lighthouse/output_files/20231104140155_8e4/user_input_text_blocks.json")
-    # parser.parse_file("/home/lighthouse/tm_meeting_assistant/example/output_files/user_input_text_blocks.json")
+    parser.parse_file("/home/lighthouse/tm_meeting_assistant/example/output_files/user_input_text_blocks.json")
 
     role_dict = parser.role_dict
     event_list = parser.event_list
     meeting_info_dict = parser.meeting_info_dict
-    # print(parser.get_total_event_num())
+    print('total_event_num: ',parser.get_total_event_num())
 
     # print("Role Dictionary:")
     # print(role_dict)
@@ -49,3 +71,4 @@ if __name__ == '__main__':
             print('Child', event.get_child_events())
         elif isinstance(event, NoticeEvent):
             print('notice: ', event.get_event())
+            

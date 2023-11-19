@@ -25,6 +25,202 @@
             "content": "L1P1 初试啼声，介绍自己\n\nL2P1 演讲项目内容\n"
         }
     ],
-    "role_name_list": "    礼宾师: xxx \n    摄影师: xxx \n    会议经理: xxx \n    时间官: xxx \n    哼哈师: xxx \n    语法师: xxx \n    总体点评师: xxx \n    破冰师: xxx \n    主席: xxx \n    主持人: xxx \n    备稿演讲者: xxx \n    即兴主持人: xxx \n    即兴点评师: xxx \n    备稿点评师: xxx \n    下一期会议经理: xxx",
-    "agenda_content": "# 会议开场\n主持人开场白(介绍会议主要内容、及可能的议程改动) 1 主持人\n介绍会议规则以及宾客介绍（限时每位30秒） 2 礼宾师\n介绍国际演讲会及捷普聚思国际演讲俱乐部 5 主席\n\n# 会议支持者介绍\n主持人介绍及中场串词 1 主持人\n时间官 1 时间官\n哼哈师 1 哼哈师\n语法师&词汇大师（今日之词：） 2 语法师\n总体点评师 1 总体点评师\n破冰师 6 破冰师\n\n# 即兴演讲\n主持人串词 1 主持人\n即兴主持人 2 即兴主持人\n即兴演讲《诗和远方》（演讲每人2分钟，邀请串场1分钟） 18 会员&宾客\n主持人串词 1 主持人\n即兴点评报告 7 即兴点评师\n\n# 小歇及合影 5\n\n# 备稿演讲及点评\n主持人串词 1 主持人\n点评师介绍项目级别和要求 1 备稿点评师1\n备稿演讲1《人工智能，我们该何去何从》 7 备稿演讲者1\n点评师介绍项目级别和要求 1 备稿点评师2\n备稿演讲2《蜕变》MS5-1 12 备稿演讲者2\n主持人串词 1 主持人\n备稿点评1 3 备稿点评师1\n主持人串词 1 主持人\n备稿点评2 3 备稿点评师2\n\n# 会议支持者报告\n主持人开场及中场串词 1 主持人\n时间官报告 2 时间官\n哼哈师报告 2 哼哈师\n语法师报告 3 语法师\n总体点评师报告 7 总体点评师\n\n# 主持人提示观众投票选出“最佳备稿演讲”等，微信小程序投票\n\n# 会议尾声\n嘉宾回访环节 2 主席\n颁奖 2 主席\n会议招募 1 下一期会议经理\n\n# 会议结束"
+    "role_name_list": "    礼宾师: xxx \n    摄影师: xxx \n    会议经理: xxx \n    时间官: xxx \n    哼哈师: xxx \n    语法师: xxx \n    总体点评师: xxx \n    破冰师: xxx \n    主席: xxx \n    主持人: xxx \n    备稿演讲者1: xxx \n    备稿演讲者2: xxx \n    即兴主持人: xxx \n    即兴点评师: xxx \n    备稿点评师1: xxx \n    备稿点评师2: xxx \n    下一期会议经理: xxx \n    会员&宾客: xxx",
+    "agenda_content": [
+        {
+            "event_name": "会议开场",
+            "child_events": [
+                {
+                    "event_name": "主持人开场白(介绍会议主要内容、及可能的议程改动)",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "介绍会议规则以及宾客介绍（限时每位30秒）",
+                    "duration": "2",
+                    "role": "礼宾师"
+                },
+                {
+                    "event_name": "介绍国际演讲会及捷普聚思国际演讲俱乐部",
+                    "duration": "5",
+                    "role": "主席"
+                }
+            ]
+        },
+        {
+            "event_name": "会议支持者介绍",
+            "child_events": [
+                {
+                    "event_name": "主持人介绍及中场串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "时间官",
+                    "duration": "1",
+                    "role": "时间官"
+                },
+                {
+                    "event_name": "哼哈师",
+                    "duration": "1",
+                    "role": "哼哈师"
+                },
+                {
+                    "event_name": "语法师&词汇大师（今日之词：）",
+                    "duration": "2",
+                    "role": "语法师"
+                },
+                {
+                    "event_name": "总体点评师",
+                    "duration": "1",
+                    "role": "总体点评师"
+                },
+                {
+                    "event_name": "破冰师",
+                    "duration": "6",
+                    "role": "破冰师"
+                }
+            ]
+        },
+        {
+            "event_name": "即兴演讲",
+            "child_events": [
+                {
+                    "event_name": "主持人串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "即兴主持人",
+                    "duration": "2",
+                    "role": "即兴主持人"
+                },
+                {
+                    "event_name": "即兴演讲《诗和远方》（演讲每人2分钟，邀请串场1分钟）",
+                    "duration": "18",
+                    "role": "会员&宾客"
+                },
+                {
+                    "event_name": "主持人串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "即兴点评报告",
+                    "duration": "7",
+                    "role": "即兴点评师"
+                }
+            ]
+        },
+        {
+            "event_name": "小歇及合影",
+            "duration": "5"
+        },
+        {
+            "event_name": "备稿演讲及点评",
+            "child_events": [
+                {
+                    "event_name": "主持人串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "点评师介绍项目级别和要求",
+                    "duration": "1",
+                    "role": "备稿点评师1"
+                },
+                {
+                    "event_name": "备稿演讲1《人工智能，我们该何去何从》",
+                    "duration": "7",
+                    "role": "备稿演讲者1"
+                },
+                {
+                    "event_name": "点评师介绍项目级别和要求",
+                    "duration": "1",
+                    "role": "备稿点评师2"
+                },
+                {
+                    "event_name": "备稿演讲2《蜕变》MS5-1",
+                    "duration": "12",
+                    "role": "备稿演讲者2"
+                },
+                {
+                    "event_name": "主持人串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "备稿点评1",
+                    "duration": "3",
+                    "role": "备稿点评师1"
+                },
+                {
+                    "event_name": "主持人串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "备稿点评2",
+                    "duration": "3",
+                    "role": "备稿点评师2"
+                }
+            ]
+        },
+        {
+            "event_name": "会议支持者报告",
+            "child_events": [
+                {
+                    "event_name": "主持人开场及中场串词",
+                    "duration": "1",
+                    "role": "主持人"
+                },
+                {
+                    "event_name": "时间官报告",
+                    "duration": "2",
+                    "role": "时间官"
+                },
+                {
+                    "event_name": "哼哈师报告",
+                    "duration": "2",
+                    "role": "哼哈师"
+                },
+                {
+                    "event_name": "语法师报告",
+                    "duration": "3",
+                    "role": "语法师"
+                },
+                {
+                    "event_name": "总体点评师报告",
+                    "duration": "7",
+                    "role": "总体点评师"
+                }
+            ]
+        },
+        {
+            "event_name": "主持人提示观众投票选出“最佳备稿演讲”等，微信小程序投票"
+        },
+        {
+            "event_name": "会议尾声",
+            "child_events": [
+                {
+                    "event_name": "嘉宾回访环节",
+                    "duration": "2",
+                    "role": "主席"
+                },
+                {
+                    "event_name": "颁奖",
+                    "duration": "2",
+                    "role": "主席"
+                },
+                {
+                    "event_name": "会议招募",
+                    "duration": "1",
+                    "role": "下一期会议经理"
+                }
+            ]
+        },
+        {
+            "event_name": "会议结束"
+        }
+    ]
 }
