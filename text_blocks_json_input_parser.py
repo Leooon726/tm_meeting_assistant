@@ -28,18 +28,20 @@ class TextBlocksJsonInputParser(InputTxtParser):
 
     def _parse_agenda(self,parent_event_dict_list):
         def _is_notice_block(parent_event_dict):
-            return 'child_events' not in parent_event_dict or len(parent_event_dict['child_events'])==0
+            return len(parent_event_dict) == 1 and ('event_name' in parent_event_dict)
+            # return 'child_events' not in parent_event_dict or len(parent_event_dict['child_events'])==0
 
         def _create_parent_event(parent_event_dict):
             parent_event = ParentEvent(parent_event_dict['event_name'])
             if 'duration' in parent_event_dict:
                 parent_event.set_parent_event_duration(
                     parent_event_dict['duration'])
-            for child_event in parent_event_dict['child_events']:
-                child_event_name = child_event['event_name']
-                child_event_duration = child_event['duration']
-                person_name = self._get_person_name_from_role(child_event['role'])
-                parent_event.add_child_event(child_event_name, child_event_duration, person_name)
+            if 'child_events' in parent_event_dict:
+                for child_event in parent_event_dict['child_events']:
+                    child_event_name = child_event['event_name']
+                    child_event_duration = child_event['duration']
+                    person_name = self._get_person_name_from_role(child_event['role'])
+                    parent_event.add_child_event(child_event_name, child_event_duration, person_name)
             return parent_event
 
         for parent_event_dict in parent_event_dict_list:

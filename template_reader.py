@@ -109,6 +109,8 @@ class XlsxTemplateReader():
     def get_user_filled_fields_from_sheet(self):
         field_list = []
         for block_name in self.template_block_position_dict.keys():
+            if not isinstance(block_name, str):
+                continue
             # the following blocks should be automatically filled by program, not by users.
             if block_name in ['parent_block','notice_block','child_block']:
                 continue

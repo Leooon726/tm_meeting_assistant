@@ -5,8 +5,7 @@ def coordinate_string_to_index(coord):
     '''
     return col index and row index.
     '''
-    coord_tuple = coordinate_from_string(
-        coord)  # Parse the first coordinate string
+    coord_tuple = coordinate_from_string(coord)
     coord_col_idx = column_index_from_string(coord_tuple[0])
     return coord_col_idx, coord_tuple[1]
 
