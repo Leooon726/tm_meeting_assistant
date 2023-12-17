@@ -22,7 +22,7 @@ class ParentEvent():
     def __init__(self, parent_event_name):
         '''
         parent: {'start_time':'12:01','event_name':'开场','duration':'8'}
-        child: {'start_time':'12:01','event_name':'开场白','end_time':'15:01','duration':'8','host_name':'林长宏'}
+        child: {'start_time':'12:01','event_name':'开场白','end_time':'15:01','duration':'8','host_name':'林长宏', 'duration_buffer': 0}
         only event_start_time is given, other time and duration are derived.
         '''
         self.parent_event = {
@@ -35,7 +35,7 @@ class ParentEvent():
     def set_parent_event_duration(self, duration):
         self.parent_event['duration'] = float(duration)
 
-    def add_child_event(self, child_event_name, duration, host_name):
+    def add_child_event(self, child_event_name, duration, host_name, comment='', duration_buffer=0):
         '''
         Adds to self.child_events with order.
         '''
@@ -44,7 +44,9 @@ class ParentEvent():
             'event_name': child_event_name,
             'end_time': None,
             'duration': float(duration),
-            'host_name': host_name
+            'host_name': host_name,
+            'comment': comment,
+            'duration_buffer': float(duration_buffer)
         }
         self.child_events.append(data)
 
@@ -68,7 +70,7 @@ class ParentEvent():
         for child_event in self.child_events:
             child_event['start_time'] = cur_time
             child_event['end_time'] = cur_time + timedelta(
-                minutes=child_event['duration'])
+                minutes=(child_event['duration']+child_event['duration_buffer']))
             cur_time = child_event['end_time']
 
         # If parent event duration already set, no need to derive it.

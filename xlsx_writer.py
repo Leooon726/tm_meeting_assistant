@@ -269,7 +269,6 @@ class XlsxWriter():
                     cell_value = cell.value
                     if cell_value is not None and isinstance(cell_value,str) and self._is_field_to_be_filled(cell_value,key):
                         cell.value = self._fill_field(cell_value,value)
-                        # cell.value = cell.value.replace(key, str(value))
         return sheet
 
     def merge_cells(self, start_coord, end_coord):
